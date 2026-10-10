@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מגיני האנרגיה – מוקאפ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Suez+One&family=Rubik:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="viewport">
+  <div id="stage">
+    <div class="bg"></div>
+
+    <!-- Title card -->
+    <div class="title-card">
+      <div class="stars" id="hud-stars"><span>★</span><span>★</span><span>★</span></div>
+      <div class="title-text">
+        <small>שלב 1</small>
+        <strong>הלייזר הסולארי</strong>
+      </div>
+    </div>
+
+    <!-- Alien approach meter -->
+    <div class="threat">
+      <span>החייזר מתקרב!</span>
+      <div class="threat-bar"><div class="threat-fill" id="threat-fill"></div></div>
+    </div>
+
+    <img class="sprite alien boil" id="alien" src="../assets/art/alien.png" alt="חייזר">
+
+    <!-- Energy chain -->
+    <div class="chain" id="chain"></div>
+
+    <!-- Characters -->
+    <img class="sprite professor boil" id="professor" src="../assets/art/professor.png" alt="פרופסור וולט">
+    <div class="bubble" id="bubble"><p id="bubble-text"></p></div>
+    <img class="sprite sparky boil" id="sparky" src="../assets/art/sparky.png" alt="ספארקי">
+
+    <!-- Card tray -->
+    <div class="tray">
+      <div class="tray-label">הקלפים שלך</div>
+      <div class="cards" id="cards"></div>
+    </div>
+
+    <!-- Laser beam / FX layer -->
+    <div class="beam" id="beam"></div>
+    <div class="flash" id="flash"></div>
+
+    <!-- Victory screen -->
+    <div class="victory" id="victory">
+      <div class="victory-card">
+        <div class="ribbon">כדור הארץ ניצל!</div>
+        <div class="big-stars" id="big-stars"></div>
+        <h3>מה למדת:</h3>
+        <div class="summary" id="summary"></div>
+        <p class="lesson">אנרגיה לא נוצרת ולא נעלמת – היא רק הופכת מסוג לסוג.</p>
+        <div class="buttons">
+          <button class="btn" id="btn-quiz">לבוחן הקצר</button>
+          <button class="btn alt" id="btn-replay">שחק שוב</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Old film overlay -->
+    <canvas class="grain" id="grain"></canvas>
+    <div class="scratches"><i></i><i></i><i></i></div>
+    <div class="vignette"></div>
+    <div class="iris" id="iris"></div>
+  </div>
+</div>
+
+<!-- Hand-drawn "line boil" filter -->
+<svg width="0" height="0" style="position:absolute">
+  <filter id="boil">
+    <feTurbulence id="boil-noise" type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="1"/>
+    <feDisplacementMap in="SourceGraphic" scale="3"/>
+  </filter>
+</svg>
+
+<script src="game.js"></script>
+</body>
+</html>

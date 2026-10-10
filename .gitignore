@@ -1,0 +1,3 @@
+# Raw AI generations (large, regenerable with tools/generate_assets.py)
+assets/raw/
+__pycache__/
