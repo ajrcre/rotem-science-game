@@ -3,73 +3,6 @@
 // ---------- Data ----------
 const ART = "../assets/art/";
 
-const CARDS = {
-  sun:         { label: "שמש",       fact: "השמש היא מקור אנרגיה." },
-  light:       { label: "אור",       fact: "אור הוא סוג של אנרגיה." },
-  solar_panel: { label: "תא סולרי",  fact: "תא סולרי הוא ממיר: אור ← חשמל." },
-  electricity: { label: "חשמל",      fact: "חשמל הוא סוג של אנרגיה." },
-  battery:     { label: "סוללה",     fact: "סוללה אוגרת אנרגיה כימית והופכת אותה לחשמל." },
-  speaker:     { label: "רמקול",     fact: "רמקול ממיר חשמל לקול." },
-  turbine:     { label: "טורבינה",   fact: "טורבינת רוח ממירה אנרגיית תנועה לחשמל." },
-  heat:        { label: "חום",       fact: "חום הוא סוג של אנרגיה." },
-  laser:       { label: "לייזר",     fact: "לייזר ממיר חשמל לאור." },
-};
-
-const LEVEL = {
-  intro: "הצילו! חייזר מתקרב! נבנה לייזר סולארי. קודם כול – מאיפה תגיע האנרגיה? בחרו מקור אנרגיה.",
-  steps: [
-    { card: "sun",         tag: "מקור",  need: "צריך מקור אנרגיה מתחדש שזורח בשמיים.",
-      good: "נכון! השמש היא מקור האנרגיה שלנו – ומקור מתחדש! איזה סוג אנרגיה היא שולחת אלינו?" },
-    { card: "light",       tag: "אנרגיה", need: "איזה סוג אנרגיה השמש שולחת ואנחנו רואים בעיניים?",
-      good: "בדיוק! השמש שולחת אנרגיית אור (וגם חום). עכשיו – מה יהפוך את האור לחשמל?" },
-    { card: "solar_panel", tag: "ממיר",  need: "צריך ממיר שהופך אנרגיית אור לחשמל.",
-      good: "מעולה! התא הסולרי ממיר אנרגיית אור לאנרגיה חשמלית. ואיזו אנרגיה יוצאת ממנו?" },
-    { card: "electricity", tag: "אנרגיה", need: "איזה סוג אנרגיה יוצא מהתא הסולרי וזורם בחוטים?",
-      good: "נכון! אנרגיה חשמלית תזרום ללייזר, והוא ימיר אותה בחזרה לאור. הלייזר טעון!" },
-  ],
-  goal: "laser",
-  leverLine: "הכול מחובר! עכשיו – תפסו את הידית ומשכו אותה למטה בכל הכוח!",
-  deck: ["battery", "solar_panel", "speaker", "sun", "electricity", "turbine", "heat", "light"],
-  summary: [["שמש"], ["אור"], ["תא סולרי", true], ["חשמל"], ["לייזר", true], ["אור"]],
-  quiz: [
-    { type: "choice", tag: "בחירה",
-      prompt: "איזו המרת אנרגיה מתרחשת בתא סולרי?",
-      options: ["אור ← חשמל", "חשמל ← אור", "חום ← תנועה", "כימית ← חשמל"],
-      answer: "אור ← חשמל",
-      explain: "התא הסולרי קולט את האור של השמש ומייצר זרם חשמלי – כלומר הוא ממיר אנרגיית אור לאנרגיה חשמלית.",
-      review: "תא סולרי ממיר אנרגיית אור לאנרגיה חשמלית." },
-    { type: "order", tag: "סידור",
-      prompt: "סדרו את שרשרת האנרגיה של הלייזר הסולארי, מההתחלה ועד הסוף.",
-      items: [["sun", "שמש"], ["light", "אור"], ["solar_panel", "תא סולרי"], ["electricity", "חשמל"], ["laser", "לייזר"]],
-      explain: "השמש היא המקור ← היא שולחת אנרגיית אור ← התא הסולרי ממיר את האור לחשמל ← החשמל זורם ללייזר, שממיר אותו בחזרה לאור.",
-      review: "שמש ← אור ← תא סולרי ← חשמל ← לייזר." },
-    { type: "choice", tag: "בחירה",
-      prompt: "איזה מקור אנרגיה הוא מקור מתחדש?",
-      options: ["שמש", "נפט", "פחם", "גז טבעי"],
-      answer: "שמש",
-      explain: "מקור מתחדש לא נגמר, או מתחדש מעצמו בזמן קצר – כמו שמש, רוח ומים זורמים. נפט, פחם וגז נוצרו במשך מיליוני שנים, ואם נשתמש בהם – הם ייגמרו.",
-      review: "מקורות מתחדשים: שמש, רוח, מים זורמים. לא מתחדשים: נפט, פחם, גז." },
-    { type: "choice", tag: "בחירה",
-      prompt: "כשהלייזר פועל זמן רב, הוא מתחמם. מה זה אומר על האנרגיה?",
-      options: ["חלק מהאנרגיה החשמלית הפכה לחום", "נוצרה אנרגיה חדשה בתוך הלייזר", "חלק מהאנרגיה נעלמה", "החום הפך לאנרגיה חשמלית"],
-      answer: "חלק מהאנרגיה החשמלית הפכה לחום",
-      explain: "אנרגיה לא נוצרת ולא נעלמת – היא רק הופכת מסוג לסוג. בכל המרה חלק מהאנרגיה הופך לחום, ולכן מכשירים מתחממים.",
-      review: "אנרגיה לא נוצרת ולא נעלמת. בכל המרה חלק ממנה הופך לחום." },
-    { type: "open", tag: "כתיבה",
-      prompt: "הסבירו במשפט אחד: מה התפקיד של התא הסולרי בשרשרת של הלייזר?",
-      model: "התא הסולרי הוא ממיר אנרגיה: הוא קולט את אנרגיית האור של השמש והופך אותה לאנרגיה חשמלית, שמפעילה את הלייזר.",
-      keywords: [["אור", ["אור"]], ["חשמל", ["חשמל"]], ["ממיר / הופך", ["ממיר", "ממירה", "להמיר", "הופך", "הופכת", "להפוך", "משנה", "הופכים"]]],
-      explain: "בבוחן כתוב כדאי להזכיר שלושה דברים: מה נכנס (אור), מה יוצא (חשמל), ושהתא הסולרי הוא ממיר.",
-      review: "תשובה מלאה: התא הסולרי ממיר אנרגיית אור (מהשמש) לאנרגיה חשמלית." },
-  ],
-};
-
-const CHARACTERS = {
-  professor: { poses: ["idle", "talk", "cheer", "worried", "point"], idle: "breathe" },
-  sparky:    { poses: ["idle", "dance_a", "dance_b", "sad", "pull", "cheer"], idle: "bob" },
-  alien:     { poses: ["idle", "laugh", "scared"], idle: "hover" },
-};
-
 // ---------- Helpers ----------
 const $ = (id) => document.getElementById(id);
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -93,6 +26,20 @@ function stageRect(el) {
   const r = el.getBoundingClientRect();
   return { x: (r.left - base.left) / s, y: (r.top - base.top) / s, w: r.width / s, h: r.height / s };
 }
+
+// ---------- Progress: best stars and quiz score per level (this browser only) ----------
+const Progress = {
+  key: "energy-defenders-progress-v1",
+  load() {
+    try { return JSON.parse(localStorage.getItem(this.key)) || {}; } catch { return {}; }
+  },
+  best(id, field, value) {
+    const data = this.load();
+    data[id] ??= {};
+    if (!(data[id][field] >= value)) data[id][field] = value;
+    try { localStorage.setItem(this.key, JSON.stringify(data)); } catch { /* storage blocked: progress just isn't kept */ }
+  },
+};
 
 // ---------- Motion: damped springs drive every reaction ----------
 class Spring {
@@ -244,6 +191,15 @@ class Actor {
   }
 
   // New frame fades in on top of the old one, so there is never a see-through moment.
+  // Swap to another character (each level has its own alien boss).
+  setCharacter(name) {
+    if (name === this.name) return;
+    this.name = name;
+    this.cache = CHARACTERS[name].poses.map((p) => Object.assign(new Image(), { src: frameSrc(name, p) }));
+    this.current = null;
+    this.pose("idle", false);
+  }
+
   pose(p, pop = true) {
     if (p === this.current) return;
     this.current = p;
@@ -409,214 +365,6 @@ class Lever {
   }
 }
 
-// ---------- Laser FX: additive-blend canvas (charge, beam, sparks, shockwave) ----------
-class BeamFX {
-  constructor(canvas, size = 640) {
-    this.canvas = canvas;
-    this.ctx = canvas.getContext("2d");
-    this.k = canvas.width / size;            // canvas pixels per scene pixel
-    this.size = size;
-    this.sparks = [];
-    this.rings = [];
-    this.charge = null;
-    this.beam = null;
-    this.running = false;
-  }
-
-  reset() {
-    this.sparks = [];
-    this.rings = [];
-    this.charge = this.beam = null;
-  }
-
-  chargeAt(p, ms) { this.charge = { p, t0: performance.now(), ms }; this.run(); }
-
-  fire(from, to, ms) {
-    this.charge = null;
-    this.beam = { from, to, t0: performance.now(), ms };
-    this.run();
-  }
-
-  burst(p, n, { speed = [200, 800], spread = TAU, dir = 0, life = [0.5, 1.1], size = [2, 5] } = {}) {
-    for (let i = 0; i < n; i++) {
-      const a = dir + rand(-spread / 2, spread / 2);
-      const v = rand(...speed);
-      this.sparks.push({ x: p.x, y: p.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v,
-                         age: 0, life: rand(...life), size: rand(...size) });
-    }
-    this.run();
-  }
-
-  ring(p, radius = 260, ms = 550) { this.rings.push({ p, radius, t0: performance.now(), ms }); this.run(); }
-
-  run() {
-    if (this.running) return;
-    this.running = true;
-    let last = performance.now();
-    const tick = (now) => {
-      const dt = Math.min((now - last) / 1000, 1 / 30);
-      last = now;
-      this.draw(now, dt);
-      if (this.charge || this.beam || this.sparks.length || this.rings.length) requestAnimationFrame(tick);
-      else { this.running = false; this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height); }
-    };
-    requestAnimationFrame(tick);
-  }
-
-  glow(x, y, r, stops) {
-    const g = this.ctx.createRadialGradient(x, y, 0, x, y, r);
-    stops.forEach(([o, c]) => g.addColorStop(o, c));
-    this.ctx.fillStyle = g;
-    this.ctx.beginPath();
-    this.ctx.arc(x, y, r, 0, TAU);
-    this.ctx.fill();
-  }
-
-  draw(now, dt) {
-    const { ctx } = this;
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    ctx.setTransform(this.k, 0, 0, this.k, 0, 0);
-    ctx.globalCompositeOperation = "lighter";
-    if (this.charge) this.drawCharge(now);
-    if (this.beam) this.drawBeam(now);
-    this.drawSparks(dt);
-    this.drawRings(now);
-    ctx.globalCompositeOperation = "source-over";
-  }
-
-  drawCharge(now) {
-    const { p, t0, ms } = this.charge;
-    const u = Math.min((now - t0) / ms, 1);
-    // Light motes get sucked into the muzzle.
-    for (let i = 0; i < 3; i++) {
-      const a = rand(0, TAU), r = rand(70, 150);
-      const v = rand(260, 420);
-      this.sparks.push({ x: p.x + Math.cos(a) * r, y: p.y + Math.sin(a) * r,
-                         vx: -Math.cos(a) * v, vy: -Math.sin(a) * v, age: 0, life: r / v,
-                         size: rand(1.5, 3), noGravity: true });
-    }
-    const flick = 1 + 0.15 * Math.sin(now * 0.05);
-    this.glow(p.x, p.y, (30 + 70 * u) * flick, [[0, "rgba(255,255,255,0.95)"], [0.25, "rgba(255,230,140,0.7)"],
-                                                 [0.6, "rgba(255,140,50,0.25)"], [1, "rgba(255,90,20,0)"]]);
-    this.glow(p.x, p.y, 220 * u, [[0, "rgba(255,200,120,0.18)"], [1, "rgba(255,160,80,0)"]]);
-  }
-
-  drawBeam(now) {
-    const { ctx } = this;
-    const { from, to, t0, ms } = this.beam;
-    const t = now - t0;
-    if (t > ms) { this.beam = null; return; }
-    const extend = Math.min(t / 110, 1);
-    const fade = t > ms - 160 ? (ms - t) / 160 : 1;
-    const dx = to.x - from.x, dy = to.y - from.y;
-    const len = Math.hypot(dx, dy) * extend;
-    const ang = Math.atan2(dy, dx);
-    const w = 22 * fade * (1 + 0.14 * Math.sin(now * 0.07) + rand(-0.06, 0.06));
-    const end = { x: from.x + Math.cos(ang) * len, y: from.y + Math.sin(ang) * len };
-
-    // The beam lights up the sky around the muzzle and the target.
-    this.glow(from.x, from.y, 300, [[0, `rgba(255,190,110,${0.28 * fade})`], [1, "rgba(255,150,60,0)"]]);
-    this.glow(end.x, end.y, 320, [[0, `rgba(255,170,90,${0.32 * fade})`], [1, "rgba(255,120,40,0)"]]);
-
-    ctx.save();
-    ctx.translate(from.x, from.y);
-    ctx.rotate(ang);
-    const band = (half, stops) => {
-      const g = ctx.createLinearGradient(0, -half, 0, half);
-      stops.forEach(([o, c]) => g.addColorStop(o, c));
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.roundRect(-half * 0.3, -half, len + half * 0.6, half * 2, half);
-      ctx.fill();
-    };
-    band(w * 3.2, [[0, "rgba(255,80,20,0)"], [0.5, "rgba(255,110,40,0.38)"], [1, "rgba(255,80,20,0)"]]);   // bloom
-    band(w * 1.25, [[0, "rgba(255,170,60,0)"], [0.5, "rgba(255,215,100,0.95)"], [1, "rgba(255,170,60,0)"]]); // glow
-    band(w * 0.42, [[0, "rgba(255,255,240,0.6)"], [0.5, "rgba(255,255,255,1)"], [1, "rgba(255,255,240,0.6)"]]); // core
-
-    // Energy pulses racing along the beam.
-    ctx.fillStyle = `rgba(255,255,225,${0.55 * fade})`;
-    for (let x = (t * 1.4) % 64; x < len; x += 64) {
-      ctx.beginPath();
-      ctx.ellipse(x, 0, 16, w * 0.6, 0, 0, TAU);
-      ctx.fill();
-    }
-
-    // Crackling electric arcs, redrawn every frame.
-    for (let a = 0; a < 3; a++) {
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      for (let x = 24; x < len; x += 24) ctx.lineTo(x, rand(-1, 1) * w * 1.5);
-      ctx.lineTo(len, 0);
-      ctx.strokeStyle = `rgba(255,170,90,${0.25 * fade})`;
-      ctx.lineWidth = 7;
-      ctx.stroke();
-      ctx.strokeStyle = `rgba(255,245,200,${0.85 * fade})`;
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-    ctx.restore();
-
-    // Muzzle flare with a four-point star.
-    const flare = w * 4 * (1 + 0.2 * Math.sin(now * 0.09));
-    this.glow(from.x, from.y, flare, [[0, "rgba(255,255,255,1)"], [0.3, "rgba(255,225,140,0.8)"], [1, "rgba(255,120,40,0)"]]);
-    ctx.save();
-    ctx.translate(from.x, from.y);
-    ctx.rotate(now * 0.002);
-    for (let i = 0; i < 4; i++) {
-      ctx.rotate(Math.PI / 2);
-      const g = ctx.createLinearGradient(0, 0, flare * 2.2, 0);
-      g.addColorStop(0, `rgba(255,255,230,${0.9 * fade})`);
-      g.addColorStop(1, "rgba(255,200,120,0)");
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.moveTo(0, -4); ctx.lineTo(flare * 2.2, 0); ctx.lineTo(0, 4);
-      ctx.fill();
-    }
-    ctx.restore();
-
-    // Impact: a hot spot and a spray of sparks bouncing back off the hull.
-    if (extend >= 1) {
-      this.glow(end.x, end.y, w * 4.5 * (1 + rand(-0.15, 0.15)),
-                [[0, "rgba(255,255,255,1)"], [0.35, "rgba(255,220,130,0.85)"], [1, "rgba(255,100,30,0)"]]);
-      this.burst(end, 5, { dir: ang + Math.PI, spread: 2.2, speed: [180, 560], life: [0.35, 0.8], size: [1.5, 3.5] });
-    }
-  }
-
-  drawSparks(dt) {
-    const { ctx } = this;
-    ctx.lineCap = "round";
-    this.sparks = this.sparks.filter((s) => (s.age += dt) < s.life);
-    for (const s of this.sparks) {
-      if (!s.noGravity) { s.vy += 760 * dt; s.vx *= 0.985; s.vy *= 0.985; }
-      s.x += s.vx * dt;
-      s.y += s.vy * dt;
-      const u = s.age / s.life;
-      const hue = 55 - 40 * u;
-      ctx.strokeStyle = `hsla(${hue}, 100%, ${78 - 25 * u}%, ${1 - u})`;
-      ctx.lineWidth = s.size * (1 - u * 0.6);
-      ctx.beginPath();
-      ctx.moveTo(s.x, s.y);
-      ctx.lineTo(s.x - s.vx * 0.035, s.y - s.vy * 0.035);
-      ctx.stroke();
-    }
-  }
-
-  drawRings(now) {
-    const { ctx } = this;
-    this.rings = this.rings.filter((r) => now - r.t0 < r.ms);
-    for (const r of this.rings) {
-      const u = (now - r.t0) / r.ms;
-      const e = 1 - Math.pow(1 - u, 3);
-      ctx.strokeStyle = `rgba(255,235,180,${0.85 * (1 - u)})`;
-      ctx.lineWidth = 20 * (1 - u) + 1;
-      ctx.beginPath();
-      ctx.arc(r.p.x, r.p.y, 12 + r.radius * e, 0, TAU);
-      ctx.stroke();
-    }
-  }
-}
-
 // ---------- Porthole cutscene ----------
 const WindowScene = {
   fx: null,
@@ -629,14 +377,17 @@ const WindowScene = {
     return { x: (r.left + r.width * fx - view.left) / s, y: (r.top + r.height * fy - view.top) / s };
   },
 
-  async play() {
-    this.fx ??= new BeamFX($("fx"));
+  async play(level) {
+    this.fx ??= new WeaponFX($("fx"));
     this.fx.reset();
+    this.level = level;
+    const weapon = WEAPONS[level.fx];
     const scene = $("window-scene");
     const ufo = $("ufo");
     const cannon = $("cannon");
-    ufo.src = `${ART}alien.png`;
+    ufo.src = `${ART}${level.boss}.png`;
     ufo.className = "ufo";
+    cannon.src = `${ART}${level.goal}.png`;
     cannon.className = "cannon";
     $("boom").className = "boom";
     $("boom-word").className = "boom-word";
@@ -648,25 +399,25 @@ const WindowScene = {
 
     restart(ufo, "enter");
     await wait(1650);
-    ufo.src = `${ART}alien_scared.png`;          // it spots the cannon
+    ufo.src = `${ART}${level.boss}_scared.png`;   // it spots the cannon
     ufo.className = "ufo wobble";
     await wait(350);
 
     // Charge up.
     const muzzle = this.local(cannon, 0.2, 0.17);
     cannon.classList.add("charging");
-    this.fx.chargeAt(muzzle, 850);
+    this.fx.chargeAt(muzzle, 850, weapon.charge);
     await wait(850);
 
     // Fire!
     const target = this.local(ufo, 0.5, 0.55);
     cannon.className = "cannon";
     restart(cannon, "recoil");
-    this.fx.fire(muzzle, target, 1000);
+    this.fx.fire(level.fx, muzzle, target, weapon.ms);
     Film.quake();
-    await wait(160);
-    ufo.className = "ufo hot";                    // the hull heats up under the beam
-    await wait(840);
+    await wait(weapon.hitAt);
+    ufo.className = `ufo ${weapon.ufo}`;          // the hull heats up / shudders under fire
+    await wait(weapon.ms - weapon.hitAt);
 
     // Kaboom.
     restart($("flash"), "go");
@@ -696,7 +447,7 @@ const WindowScene = {
     const wrap = $("debris");
     pieces.forEach((clip, i) => {
       const img = document.createElement("img");
-      img.src = `${ART}alien_scared.png`;
+      img.src = `${ART}${this.level.boss}_scared.png`;
       img.className = "debris-piece";
       img.style.clipPath = clip;
       const ang = (i / pieces.length) * TAU + 0.4;
@@ -863,15 +614,17 @@ class OpenQuestion {
 const QUESTION_TYPES = { choice: ChoiceQuestion, order: OrderQuestion, open: OpenQuestion };
 
 class Quiz {
-  constructor(level, { onReplayLevel }) {
-    this.level = level;
-    this.onReplayLevel = onReplayLevel;
+  constructor({ onNext, onMap }) {
+    this.onNext = onNext;
+    this.onMap = onMap;
     this.professor = new Actor("professor", "quiz-professor");
     this.sparky = new Actor("sparky", "quiz-sparky");
     this.body = $("quiz-body");
   }
 
-  async open() {
+  async open(level) {
+    this.level = level;
+    $("quiz-level").textContent = `שלב ${level.id} · ${level.title}`;
     await Film.iris(true);
     $("victory").classList.remove("show");
     $("quiz").classList.add("show");
@@ -946,7 +699,8 @@ class Quiz {
     const starRow = el("div", "big-stars");
     starRow.innerHTML = [0, 1, 2]
       .map((i) => `<span class="${i < stars ? "" : "lost"}" style="animation-delay:${0.2 + i * 0.2}s">★</span>`).join("");
-    const verdict = right === total ? "מושלם! אתם מוכנים לבוחן על הלייזר הסולארי."
+    Progress.best(this.level.id, "quiz", right);
+    const verdict = right === total ? `מושלם! אתם מוכנים לבוחן על ${this.level.title}.`
       : right >= total - 1 ? "כמעט מושלם! עברו על הנקודה שלמטה וזהו."
       : "התחלה טובה! כדאי לחזור על הנקודות האלה ולנסות שוב.";
     card.append(starRow, score, el("p", "verdict", verdict));
@@ -963,13 +717,17 @@ class Quiz {
     } else {
       review.append(el("p", "all-right", "ענית נכון על הכול – אין מה לחזור. כל הכבוד!"));
     }
-    const again = el("button", "btn small", "נסו שוב את הבוחן");
-    const replay = el("button", "btn small alt", "שחק שוב את השלב");
-    again.type = replay.type = "button";
+    const again = el("button", "btn small alt", "נסו שוב את הבוחן");
+    const hasNext = LEVELS.some((l) => l.id === this.level.id + 1);
+    const next = el("button", "btn small", hasNext ? "לשלב הבא" : "למפת השלבים");
+    const map = el("button", "btn small alt", "מפת השלבים");
+    again.type = next.type = map.type = "button";
     again.addEventListener("click", () => this.start());
-    replay.addEventListener("click", () => this.onReplayLevel());
+    next.addEventListener("click", () => (hasNext ? this.onNext(this.level) : this.onMap()));
+    map.addEventListener("click", () => this.onMap());
     const actions = el("div", "q-actions");
-    actions.append(again, replay);
+    actions.append(next, again);
+    if (hasNext) actions.append(map);
     card.append(review, actions);
     this.body.append(card);
 
@@ -979,14 +737,14 @@ class Quiz {
     } else {
       this.professor.play(["talk", "idle"], { fps: 4, ms: 1600 });
     }
-    again.focus({ preventScroll: true });
+    next.focus({ preventScroll: true });
   }
 }
 
 // ---------- Game ----------
 class Workbench {
-  constructor(level) {
-    this.level = level;
+  constructor({ onVictory }) {
+    this.onVictory = onVictory;
     this.professor = new Actor("professor");
     this.sparky = new Actor("sparky");
     this.alien = new Actor("alien");
@@ -997,7 +755,12 @@ class Workbench {
     );
   }
 
-  start() {
+  start(level = this.level) {
+    this.level = level;
+    $("level-num").textContent = `שלב ${level.id}`;
+    $("level-title").textContent = level.title;
+    $("chain").classList.toggle("long", level.steps.length > 4);
+    this.alien.setCharacter(level.boss);
     this.step = 0;
     this.mistakes = 0;
     this.busy = false;
@@ -1164,7 +927,7 @@ class Workbench {
     $("alien").classList.add("flee");             // the ship escapes past the window...
     $("threat-fill").style.width = "0%";
     await wait(700);
-    await WindowScene.play();                    // ...and we watch it explode outside
+    await WindowScene.play(this.level);          // ...and we watch it explode outside
     await Film.iris(true);
     WindowScene.hide();
     this.showVictory();
@@ -1173,6 +936,9 @@ class Workbench {
 
   showVictory() {
     const stars = this.mistakes === 0 ? 3 : this.mistakes <= 2 ? 2 : 1;
+    Progress.best(this.level.id, "stars", stars);
+    const next = LEVELS.find((l) => l.id === this.level.id + 1);
+    $("btn-next").textContent = next ? "לשלב הבא" : "למפת השלבים";
     $("big-stars").innerHTML = [0, 1, 2]
       .map((i) => `<span class="${i < stars ? "" : "lost"}" style="animation-delay:${0.3 + i * 0.25}s">★</span>`)
       .join("");
@@ -1180,8 +946,43 @@ class Workbench {
       .map(([t, conv]) => `<span class="chip${conv ? " conv" : ""}">${t}</span>`)
       .join("<span>←</span>");
     $("victory").classList.add("show");
+    this.onVictory?.(this.level);
+  }
+
+  stop() {
+    clearInterval(this.tauntTimer);
+    clearInterval(this.typeTimer);
+    this.busy = true;
   }
 }
+
+// ---------- Level map ----------
+const LevelMap = {
+  render() {
+    const progress = Progress.load();
+    const grid = $("level-grid");
+    grid.innerHTML = "";
+    const firstOpen = LEVELS.find((l) => !progress[l.id]?.stars);
+    for (const level of LEVELS) {
+      const p = progress[level.id] || {};
+      const btn = el("button", "level-card" + (p.stars ? " done" : "") + (level === firstOpen ? " next" : ""));
+      btn.type = "button";
+      btn.setAttribute("aria-label", `שלב ${level.id}: ${level.title}`);
+      const stars = [0, 1, 2].map((i) => `<span class="${i < (p.stars || 0) ? "" : "lost"}">★</span>`).join("");
+      btn.innerHTML = `
+        <span class="level-num">${level.id}</span>
+        <img class="level-boss" src="${ART}${level.boss}.png" alt="">
+        <img class="level-weapon" src="${ART}${level.goal}.png" alt="">
+        <strong>${level.title}</strong>
+        <span class="level-stars">${stars}</span>
+        <span class="level-quiz">${p.quiz != null ? `בוחן: ${p.quiz}/${level.quiz.length}` : "בוחן: עוד לא"}</span>`;
+      btn.addEventListener("click", () => playLevel(level));
+      grid.append(btn);
+    }
+  },
+  show() { this.render(); $("levels").classList.add("show"); },
+  hide() { $("levels").classList.remove("show"); },
+};
 
 // ---------- Boot ----------
 addEventListener("resize", fitStage);
@@ -1190,17 +991,35 @@ fitStage();
 Film.start();
 Rig.loop();
 
-const game = new Workbench(LEVEL);
-game.start();
+const game = new Workbench({});
 
-async function replayLevel() {
+async function playLevel(level) {
   await Film.iris(true);
+  LevelMap.hide();
   $("victory").classList.remove("show");
   $("quiz").classList.remove("show");
-  game.start();
+  game.start(level);
   await Film.iris(false);
 }
 
-const quiz = new Quiz(LEVEL, { onReplayLevel: replayLevel });
-$("btn-replay").addEventListener("click", replayLevel);
-$("btn-quiz").addEventListener("click", () => quiz.open());
+async function showMap() {
+  await Film.iris(true);
+  game.stop();
+  WindowScene.hide();
+  $("victory").classList.remove("show");
+  $("quiz").classList.remove("show");
+  LevelMap.show();
+  await Film.iris(false);
+}
+
+const nextLevel = (level) => {
+  const next = LEVELS.find((l) => l.id === level.id + 1);
+  return next ? playLevel(next) : showMap();
+};
+
+const quiz = new Quiz({ onNext: nextLevel, onMap: showMap });
+$("btn-replay").addEventListener("click", () => playLevel(game.level));
+$("btn-next").addEventListener("click", () => nextLevel(game.level));
+$("btn-quiz").addEventListener("click", () => quiz.open(game.level));
+$("btn-map").addEventListener("click", showMap);
+LevelMap.show();

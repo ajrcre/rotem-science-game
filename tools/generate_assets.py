@@ -271,6 +271,69 @@ ASSETS += [
     pose("alien", "laugh", "laughing hysterically in the flying saucer, head thrown back, eyes squeezed shut, tentacles clutching its belly, tears of laughter."),
     pose("alien", "scared", "terrified in the flying saucer, three eyes bulging huge, tentacles thrown up, teeth chattering, sweat drops."),
 ]
+# ---------- Levels 2-6 ----------
+WEAPON_POSE = " Seen from the side, the barrel or nozzle pointing up and to the right. No characters."
+
+
+def card(name: str, prompt: str) -> AssetSpec:
+    return AssetSpec(name, prompt, references=[])
+
+
+def boss(name: str, prompt: str) -> list[AssetSpec]:
+    return [
+        AssetSpec(name, prompt + " Riding a riveted metal flying saucer with a glass dome and round light "
+                  "bulbs along the rim, 1930s cartoon villain energy.", references=[]),
+        pose(name, "laugh", "laughing hysterically in the flying saucer, head thrown back, eyes squeezed shut, "
+             "clutching its belly, tears of laughter."),
+        pose(name, "scared", "terrified in the flying saucer, eyes bulging huge, arms thrown up, teeth "
+             "chattering, sweat drops flying."),
+    ]
+
+
+ASSETS += [
+    card("chemical", "A cartoon round glass chemistry flask character bubbling with green liquid and floating "
+         "molecule balls, cute face on the flask, rubber hose arms."),
+    card("motion", "A cartoon rolling wheel character dashing forward with bold speed lines behind it, cute "
+         "determined face, rubber hose arms and legs."),
+    card("wind", "A cartoon puffy cloud character with puffed cheeks blowing a strong gust of wind, with swirly "
+         "wind lines and a few leaves flying."),
+    card("generator", "A vintage brass electric dynamo generator machine with copper coils, a flywheel and a "
+         "hand crank, cute face, rubber hose arms."),
+    card("motor", "A vintage electric motor with copper windings and a spinning shaft with motion lines, cute "
+         "face, rubber hose arms."),
+    card("dam", "A cartoon concrete water dam holding back a blue lake, water gushing from a gate at the bottom, "
+         "a small cute face on the dam wall."),
+    card("height", "A cartoon round boulder character sitting on the very edge of a tall cliff, nervous smile, "
+         "about to tip over."),
+    card("fuel", "A vintage red metal fuel jerrycan character with a cute face and rubber hose arms."),
+    card("burning", "A cartoon wooden campfire with crossed logs and big orange flames, a cute face in the "
+         "flames, little sparks rising."),
+    card("food", "A cartoon shiny red apple character with a leaf on top, cute face, rubber hose arms and legs."),
+    card("muscle", "A cartoon arm flexing a huge bicep muscle, wearing a white four-finger glove, with a cute "
+         "proud face drawn on the bicep."),
+    card("elastic", "A cartoon thin orange rubber band stretched long and tight between two small wooden pegs, "
+         "forming a long narrow loop, with little stretch lines and a tiny strained face on the band. "
+         "Clearly a rubber band, not a blob."),
+    card("sound", "A cartoon musical note character singing, with curved sound waves around it, cute face, "
+         "rubber hose arms."),
+    card("sonic_cannon", "A big retro sonic cannon: a giant brass gramophone horn mounted on a wheeled wooden "
+         "cart with speaker cones, dials and a battery box, 1930s sci-fi weapon. No text, no signs, no banners." + WEAPON_POSE),
+    card("fan_cannon", "A giant retro electric fan cannon on a wheeled cart: a huge caged propeller fan driven "
+         "by a brass electric motor, 1930s sci-fi weapon." + WEAPON_POSE),
+    card("water_cannon", "A big retro water cannon on wheels: a riveted brass water tank, an electric pump with "
+         "copper coils and a long nozzle, 1930s sci-fi weapon." + WEAPON_POSE),
+    card("flamethrower", "A big retro flame cannon on wheels: a red fuel tank, brass pipes and a wide nozzle "
+         "with a small pilot flame, 1930s sci-fi weapon. Nothing floating above it." + WEAPON_POSE),
+    card("slingshot", "A giant wooden Y-shaped slingshot on a sturdy stand, a thick orange rubber band pulled "
+         "back with a leather pouch holding a round grey rock." + WEAPON_POSE),
+    *boss("alien2", "A chubby sky-blue alien villain with two enormous floppy ears and a big grin."),
+    *boss("alien3", "A tall skinny yellow alien villain with a propeller beanie hat and long noodle arms."),
+    *boss("alien4", "A teal fish-like alien villain with fins and gills, blowing bubbles, the glass dome "
+          "filled with water."),
+    *boss("alien5", "A boxy red robot alien villain with two smokestacks on its head puffing black smoke."),
+    *boss("alien6", "A big orange alien king with five eyes, a golden crown and a royal blue cape, the final "
+          "boss, on an extra large ornate golden saucer."),
+]
 ASSETS_BY_NAME = {a.name: a for a in ASSETS}
 
 

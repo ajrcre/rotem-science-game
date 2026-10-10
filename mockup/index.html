@@ -17,10 +17,12 @@
     <div class="title-card">
       <div class="stars" id="hud-stars"><span>★</span><span>★</span><span>★</span></div>
       <div class="title-text">
-        <small>שלב 1</small>
-        <strong>הלייזר הסולארי</strong>
+        <small id="level-num">שלב 1</small>
+        <strong id="level-title">הלייזר הסולארי</strong>
       </div>
     </div>
+
+    <button class="hud-btn" id="btn-map" type="button">מפת השלבים</button>
 
     <!-- Alien approach meter -->
     <div class="threat">
@@ -93,6 +95,7 @@
         <p class="lesson">אנרגיה לא נוצרת ולא נעלמת – היא רק הופכת מסוג לסוג.</p>
         <div class="buttons">
           <button class="btn" id="btn-quiz">לבוחן הקצר</button>
+          <button class="btn" id="btn-next">לשלב הבא</button>
           <button class="btn alt" id="btn-replay">שחק שוב</button>
         </div>
       </div>
@@ -105,7 +108,7 @@
         <header class="sheet-head">
           <div class="sheet-title">
             <h2 id="quiz-title">הבוחן של פרופסור וולט</h2>
-            <small>שלב 1 · הלייזר הסולארי</small>
+            <small id="quiz-level">שלב 1 · הלייזר הסולארי</small>
           </div>
           <ol class="dots" id="quiz-dots" aria-label="התקדמות בבוחן"></ol>
         </header>
@@ -113,6 +116,16 @@
       </div>
       <div class="actor quiz-professor" id="quiz-professor" role="img" aria-label="פרופסור וולט"><div class="rig boil"><img alt=""><img alt=""></div></div>
       <div class="actor quiz-sparky" id="quiz-sparky" role="img" aria-label="ספארקי"><div class="rig boil"><img alt=""><img alt=""></div></div>
+    </section>
+
+    <!-- Level map -->
+    <section class="levels" id="levels" aria-labelledby="levels-title">
+      <div class="levels-bg"></div>
+      <header class="levels-head">
+        <h1 id="levels-title">מגיני האנרגיה</h1>
+        <p>החייזרים תוקפים! בחרו שלב, בנו את שרשרת האנרגיה – וגרשו אותם.</p>
+      </header>
+      <div class="level-grid" id="level-grid"></div>
     </section>
 
     <!-- Old film overlay -->
@@ -131,6 +144,8 @@
   </filter>
 </svg>
 
+<script src="levels.js"></script>
+<script src="fx.js"></script>
 <script src="game.js"></script>
 </body>
 </html>
