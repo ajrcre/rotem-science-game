@@ -31,6 +31,37 @@ const LEVEL = {
   leverLine: "הכול מחובר! עכשיו – תפסו את הידית ומשכו אותה למטה בכל הכוח!",
   deck: ["battery", "solar_panel", "speaker", "sun", "electricity", "turbine", "heat", "light"],
   summary: [["שמש"], ["אור"], ["תא סולרי", true], ["חשמל"], ["לייזר", true], ["אור"]],
+  quiz: [
+    { type: "choice", tag: "בחירה",
+      prompt: "איזו המרת אנרגיה מתרחשת בתא סולרי?",
+      options: ["אור ← חשמל", "חשמל ← אור", "חום ← תנועה", "כימית ← חשמל"],
+      answer: "אור ← חשמל",
+      explain: "התא הסולרי קולט את האור של השמש ומייצר זרם חשמלי – כלומר הוא ממיר אנרגיית אור לאנרגיה חשמלית.",
+      review: "תא סולרי ממיר אנרגיית אור לאנרגיה חשמלית." },
+    { type: "order", tag: "סידור",
+      prompt: "סדרו את שרשרת האנרגיה של הלייזר הסולארי, מההתחלה ועד הסוף.",
+      items: [["sun", "שמש"], ["light", "אור"], ["solar_panel", "תא סולרי"], ["electricity", "חשמל"], ["laser", "לייזר"]],
+      explain: "השמש היא המקור ← היא שולחת אנרגיית אור ← התא הסולרי ממיר את האור לחשמל ← החשמל זורם ללייזר, שממיר אותו בחזרה לאור.",
+      review: "שמש ← אור ← תא סולרי ← חשמל ← לייזר." },
+    { type: "choice", tag: "בחירה",
+      prompt: "איזה מקור אנרגיה הוא מקור מתחדש?",
+      options: ["שמש", "נפט", "פחם", "גז טבעי"],
+      answer: "שמש",
+      explain: "מקור מתחדש לא נגמר, או מתחדש מעצמו בזמן קצר – כמו שמש, רוח ומים זורמים. נפט, פחם וגז נוצרו במשך מיליוני שנים, ואם נשתמש בהם – הם ייגמרו.",
+      review: "מקורות מתחדשים: שמש, רוח, מים זורמים. לא מתחדשים: נפט, פחם, גז." },
+    { type: "choice", tag: "בחירה",
+      prompt: "כשהלייזר פועל זמן רב, הוא מתחמם. מה זה אומר על האנרגיה?",
+      options: ["חלק מהאנרגיה החשמלית הפכה לחום", "נוצרה אנרגיה חדשה בתוך הלייזר", "חלק מהאנרגיה נעלמה", "החום הפך לאנרגיה חשמלית"],
+      answer: "חלק מהאנרגיה החשמלית הפכה לחום",
+      explain: "אנרגיה לא נוצרת ולא נעלמת – היא רק הופכת מסוג לסוג. בכל המרה חלק מהאנרגיה הופך לחום, ולכן מכשירים מתחממים.",
+      review: "אנרגיה לא נוצרת ולא נעלמת. בכל המרה חלק ממנה הופך לחום." },
+    { type: "open", tag: "כתיבה",
+      prompt: "הסבירו במשפט אחד: מה התפקיד של התא הסולרי בשרשרת של הלייזר?",
+      model: "התא הסולרי הוא ממיר אנרגיה: הוא קולט את אנרגיית האור של השמש והופך אותה לאנרגיה חשמלית, שמפעילה את הלייזר.",
+      keywords: [["אור", ["אור"]], ["חשמל", ["חשמל"]], ["ממיר / הופך", ["ממיר", "ממירה", "להמיר", "הופך", "הופכת", "להפוך", "משנה", "הופכים"]]],
+      explain: "בבוחן כתוב כדאי להזכיר שלושה דברים: מה נכנס (אור), מה יוצא (חשמל), ושהתא הסולרי הוא ממיר.",
+      review: "תשובה מלאה: התא הסולרי ממיר אנרגיית אור (מהשמש) לאנרגיה חשמלית." },
+  ],
 };
 
 const CHARACTERS = {
@@ -199,9 +230,9 @@ class Rig {
 
 // ---------- Actor: aligned pose frames with cross-fade + a Rig ----------
 class Actor {
-  constructor(name) {
+  constructor(name, elementId = name) {
     this.name = name;
-    this.el = $(name);
+    this.el = $(elementId);
     const { poses, idle } = CHARACTERS[name];
     this.rig = new Rig(this.el.querySelector(".rig"), idle);
     this.layers = [...this.el.querySelectorAll("img")];
@@ -679,6 +710,279 @@ const WindowScene = {
   hide() { $("window-scene").classList.remove("show"); },
 };
 
+// ---------- Quiz: one renderer per question type (Strategy) ----------
+const HEB_LETTERS = ["א", "ב", "ג", "ד", "ה"];
+const shuffle = (arr) => {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+};
+const el = (tag, cls, text) => Object.assign(document.createElement(tag), cls ? { className: cls } : {}, text ? { textContent: text } : {});
+
+class ChoiceQuestion {
+  constructor(q, onAnswer) { this.q = q; this.onAnswer = onAnswer; }
+
+  render(root) {
+    const grid = el("div", "choices");
+    this.buttons = shuffle(this.q.options).map((opt, i) => {
+      const b = el("button", "choice");
+      b.type = "button";
+      b.dataset.value = opt;
+      b.append(el("span", "letter", HEB_LETTERS[i]), el("span", "", opt));
+      b.addEventListener("click", () => this.choose(b));
+      grid.append(b);
+      return b;
+    });
+    root.append(grid);
+    this.buttons[0].focus({ preventScroll: true });
+  }
+
+  choose(btn) {
+    const correct = btn.dataset.value === this.q.answer;
+    for (const b of this.buttons) {
+      b.disabled = true;
+      if (b.dataset.value === this.q.answer) b.classList.add("right");
+      else if (b === btn) b.classList.add("wrong");
+      else b.classList.add("dim");
+    }
+    this.onAnswer({ correct, given: btn.dataset.value });
+  }
+}
+
+class OrderQuestion {
+  constructor(q, onAnswer) { this.q = q; this.onAnswer = onAnswer; }
+
+  render(root) {
+    this.slotsEl = el("div", "order-slots");
+    this.slots = this.q.items.map((_, i) => {
+      const slot = el("div", "order-slot", String(i + 1));
+      this.slotsEl.append(slot);
+      if (i < this.q.items.length - 1) this.slotsEl.append(el("span", "arrow", "←"));
+      return slot;
+    });
+    this.pool = el("div", "order-pool");
+    for (const [key, label] of shuffle(this.q.items)) {
+      const chip = el("button", "chip-btn");
+      chip.type = "button";
+      chip.dataset.key = key;
+      chip.setAttribute("aria-label", label);
+      chip.append(Object.assign(el("img"), { src: `${ART}${key}.png`, alt: "" }), el("span", "", label));
+      chip.addEventListener("click", () => this.toggle(chip));
+      this.pool.append(chip);
+    }
+    this.check = el("button", "btn small", "בדיקה");
+    this.check.type = "button";
+    this.check.disabled = true;
+    this.check.addEventListener("click", () => this.submit());
+    const actions = el("div", "q-actions");
+    actions.append(this.check);
+    root.append(this.slotsEl, this.pool, actions);
+  }
+
+  // Tap a card in the pool → next empty slot; tap a placed card → back to the pool.
+  toggle(chip) {
+    if (this.done) return;
+    const slot = chip.closest(".order-slot");
+    if (slot) {
+      slot.textContent = String(this.slots.indexOf(slot) + 1);
+      this.pool.append(chip);
+    } else {
+      const empty = this.slots.find((s) => !s.querySelector(".chip-btn"));
+      if (!empty) return;
+      empty.textContent = "";
+      empty.append(chip);
+    }
+    this.check.disabled = this.slots.some((s) => !s.querySelector(".chip-btn"));
+  }
+
+  submit() {
+    this.done = true;
+    this.check.parentElement.remove();
+    let correct = true;
+    this.slots.forEach((slot, i) => {
+      const chip = slot.querySelector(".chip-btn");
+      const ok = chip.dataset.key === this.q.items[i][0];
+      slot.classList.add(ok ? "right" : "wrong");
+      chip.disabled = true;
+      correct &&= ok;
+    });
+    this.onAnswer({ correct });
+  }
+}
+
+class OpenQuestion {
+  constructor(q, onAnswer) { this.q = q; this.onAnswer = onAnswer; }
+
+  render(root) {
+    const wrap = el("div", "q-open");
+    const label = el("label", "", "כתבו את התשובה שלכם, כמו בבוחן:");
+    label.htmlFor = "quiz-open-answer";
+    this.input = el("textarea");
+    this.input.id = "quiz-open-answer";
+    this.input.rows = 3;
+    this.input.placeholder = "התא הסולרי…";
+    this.reveal = el("button", "btn small", "הצג תשובה לדוגמה");
+    this.reveal.type = "button";
+    this.reveal.disabled = true;
+    this.input.addEventListener("input", () => { this.reveal.disabled = this.input.value.trim().length < 3; });
+    this.reveal.addEventListener("click", () => this.showModel());
+    const actions = el("div", "q-actions");
+    actions.append(this.reveal);
+    wrap.append(label, this.input, actions);
+    root.append(wrap);
+    this.wrap = wrap;
+    this.actions = actions;
+    this.input.focus({ preventScroll: true });
+  }
+
+  showModel() {
+    this.input.readOnly = true;
+    this.reveal.remove();
+    const text = this.input.value.replace(/[֑-ׇ]/g, "");   // ignore niqqud
+    const model = el("div", "model");
+    model.append(el("strong", "", "תשובה לדוגמה: "), el("span", "", this.q.model));
+    const kws = el("div", "keywords");
+    kws.append(el("span", "", "מילות מפתח בתשובה שלך:"));
+    for (const [label, variants] of this.q.keywords) {
+      const hit = variants.some((v) => text.includes(v));
+      kws.append(el("span", "kw" + (hit ? " hit" : ""), (hit ? "✓ " : "") + label));
+    }
+    const yes = el("button", "btn small", "צדקתי ✓");
+    const no = el("button", "btn small alt", "צריך לחזור על זה");
+    yes.type = no.type = "button";
+    const grade = (correct) => { this.actions.remove(); this.onAnswer({ correct }); };
+    yes.addEventListener("click", () => grade(true));
+    no.addEventListener("click", () => grade(false));
+    this.actions.append(yes, no);
+    this.wrap.insertBefore(kws, this.actions);
+    this.wrap.insertBefore(model, kws);
+    yes.focus({ preventScroll: true });
+  }
+}
+
+const QUESTION_TYPES = { choice: ChoiceQuestion, order: OrderQuestion, open: OpenQuestion };
+
+class Quiz {
+  constructor(level, { onReplayLevel }) {
+    this.level = level;
+    this.onReplayLevel = onReplayLevel;
+    this.professor = new Actor("professor", "quiz-professor");
+    this.sparky = new Actor("sparky", "quiz-sparky");
+    this.body = $("quiz-body");
+  }
+
+  async open() {
+    await Film.iris(true);
+    $("victory").classList.remove("show");
+    $("quiz").classList.add("show");
+    this.start();
+    await Film.iris(false);
+  }
+
+  async close() {
+    await Film.iris(true);
+    $("quiz").classList.remove("show");
+  }
+
+  start() {
+    this.questions = this.level.quiz;
+    this.index = 0;
+    this.results = [];
+    const dots = $("quiz-dots");
+    dots.innerHTML = "";
+    this.questions.forEach((_, i) => dots.append(el("li", "", String(i + 1))));
+    this.professor.reset();
+    this.sparky.reset();
+    this.show(0);
+  }
+
+  dot(i) { return $("quiz-dots").children[i]; }
+
+  show(i) {
+    const q = this.questions[i];
+    this.body.innerHTML = "";
+    [...$("quiz-dots").children].forEach((d, k) => d.classList.toggle("now", k === i));
+    const meta = el("div", "q-meta");
+    meta.append(el("span", "", `שאלה ${i + 1} מתוך ${this.questions.length}`), el("span", "q-tag", q.tag));
+    this.body.append(meta, el("p", "q-prompt", q.prompt));
+    new QUESTION_TYPES[q.type](q, (r) => this.answered(q, r)).render(this.body);
+    this.professor.play(["talk", "idle"], { fps: 4, ms: 1400 });
+  }
+
+  answered(q, { correct }) {
+    this.results.push({ q, correct });
+    const d = this.dot(this.index);
+    d.classList.remove("now");
+    d.classList.add(correct ? "ok" : "miss");
+    if (correct) {
+      this.professor.play(["cheer", "idle"], { fps: 3, ms: 1100, react: "jump" });
+      this.sparky.play(["dance_a", "dance_b"], { fps: 3, ms: 1200, react: "dance" });
+    } else {
+      this.professor.play(["worried"], { ms: 1300, react: "tremble" });
+      this.sparky.play(["sad"], { ms: 1300, react: "droop" });
+    }
+    const fb = el("div", "feedback " + (correct ? "good" : "bad"));
+    const text = el("div", "fb-text");
+    text.append(el("h3", "", correct ? "נכון! 🎉" : "לא בדיוק…"), el("p", "", q.explain));
+    const last = this.index === this.questions.length - 1;
+    const next = el("button", "btn small", last ? "לסיכום" : "לשאלה הבאה");
+    next.type = "button";
+    next.addEventListener("click", () => (last ? this.summary() : this.show(++this.index)));
+    fb.append(text, next);
+    this.body.append(fb);
+    fb.scrollIntoView({ block: "nearest" });   // scrolls only the sheet, never the stage
+    next.focus({ preventScroll: true });
+  }
+
+  summary() {
+    const right = this.results.filter((r) => r.correct).length;
+    const total = this.results.length;
+    const stars = right === total ? 3 : right >= total - 2 ? 2 : 1;
+    [...$("quiz-dots").children].forEach((d) => d.classList.remove("now"));
+    this.body.innerHTML = "";
+    const card = el("div", "summary-card");
+    const score = el("div", "score", String(right));
+    score.append(el("small", "", ` / ${total}`));
+    const starRow = el("div", "big-stars");
+    starRow.innerHTML = [0, 1, 2]
+      .map((i) => `<span class="${i < stars ? "" : "lost"}" style="animation-delay:${0.2 + i * 0.2}s">★</span>`).join("");
+    const verdict = right === total ? "מושלם! אתם מוכנים לבוחן על הלייזר הסולארי."
+      : right >= total - 1 ? "כמעט מושלם! עברו על הנקודה שלמטה וזהו."
+      : "התחלה טובה! כדאי לחזור על הנקודות האלה ולנסות שוב.";
+    card.append(starRow, score, el("p", "verdict", verdict));
+
+    const misses = this.results.filter((r) => !r.correct);
+    const review = el("div", "review");
+    if (misses.length) {
+      review.append(el("h3", "", "כדאי לחזור על:"));
+      for (const { q } of misses) {
+        const item = el("div", "review-item");
+        item.append(el("strong", "", q.prompt), el("span", "", q.review));
+        review.append(item);
+      }
+    } else {
+      review.append(el("p", "all-right", "ענית נכון על הכול – אין מה לחזור. כל הכבוד!"));
+    }
+    const again = el("button", "btn small", "נסו שוב את הבוחן");
+    const replay = el("button", "btn small alt", "שחק שוב את השלב");
+    again.type = replay.type = "button";
+    again.addEventListener("click", () => this.start());
+    replay.addEventListener("click", () => this.onReplayLevel());
+    const actions = el("div", "q-actions");
+    actions.append(again, replay);
+    card.append(review, actions);
+    this.body.append(card);
+
+    if (right >= total - 1) {
+      this.professor.play(["cheer", "talk", "cheer", "idle"], { fps: 3, ms: 1800, react: "jump" });
+      this.sparky.play(["dance_a", "dance_b"], { fps: 3, ms: 2000, react: "dance" });
+    } else {
+      this.professor.play(["talk", "idle"], { fps: 4, ms: 1600 });
+    }
+    again.focus({ preventScroll: true });
+  }
+}
+
 // ---------- Game ----------
 class Workbench {
   constructor(level) {
@@ -881,6 +1185,7 @@ class Workbench {
 
 // ---------- Boot ----------
 addEventListener("resize", fitStage);
+$("stage").addEventListener("scroll", (e) => { e.target.scrollTop = 0; e.target.scrollLeft = 0; });
 fitStage();
 Film.start();
 Rig.loop();
@@ -888,12 +1193,14 @@ Rig.loop();
 const game = new Workbench(LEVEL);
 game.start();
 
-$("btn-replay").addEventListener("click", async () => {
+async function replayLevel() {
   await Film.iris(true);
   $("victory").classList.remove("show");
+  $("quiz").classList.remove("show");
   game.start();
   await Film.iris(false);
-});
-$("btn-quiz").addEventListener("click", () => {
-  $("btn-quiz").textContent = "בקרוב… 🔧";
-});
+}
+
+const quiz = new Quiz(LEVEL, { onReplayLevel: replayLevel });
+$("btn-replay").addEventListener("click", replayLevel);
+$("btn-quiz").addEventListener("click", () => quiz.open());
