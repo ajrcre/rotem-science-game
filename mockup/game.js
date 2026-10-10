@@ -266,7 +266,7 @@ const Film = {
     }, 1000 / 10);
   },
   async iris(close) {
-    if (close) Sfx.play("iris", { volume: 0.6 });
+    if (close) { Sfx.play("iris", { volume: 0.6 }); Narrator.stop(); }
     $("iris").classList.toggle("closed", close);
     await wait(850);
   },
@@ -667,6 +667,7 @@ class Quiz {
     meta.append(el("span", "", `שאלה ${i + 1} מתוך ${this.questions.length}`), el("span", "q-tag", q.tag));
     this.body.append(meta, el("p", "q-prompt", q.prompt));
     new QUESTION_TYPES[q.type](q, (r) => this.answered(q, r)).render(this.body);
+    Narrator.speak([`prompt_${this.level.id}_${i}`], (ms) => this.professor.play(["talk", "idle"], { fps: 4, ms }));
     this.professor.play(["talk", "idle"], { fps: 4, ms: 1400 });
   }
 
@@ -676,6 +677,7 @@ class Quiz {
     d.classList.remove("now");
     d.classList.add(correct ? "ok" : "miss");
     Sfx.play(correct ? "quiz_right" : "quiz_wrong");
+    Narrator.speak([`explain_${this.level.id}_${this.index}`]);
     if (correct) {
       this.professor.play(["cheer", "idle"], { fps: 3, ms: 1100, react: "jump" });
       this.sparky.play(["dance_a", "dance_b"], { fps: 3, ms: 1200, react: "dance" });
@@ -782,7 +784,7 @@ class Workbench {
     document.querySelector(".tray").classList.remove("empty");
     $("alien").className = "actor alien";
     for (const a of [this.professor, this.sparky, this.alien]) a.reset();
-    this.say(this.level.intro, "");
+    this.say(this.level.intro, "", "talk", [`intro_${level.id}`]);
     $("threat-fill").style.width = "20%";
     this.startTaunts();
   }
@@ -832,8 +834,10 @@ class Workbench {
     }
   }
 
-  // Professor speaks: typewriter text while his mouth flaps between poses.
-  say(text, mood, gesture = "talk") {
+  // Professor speaks: typewriter text and his recorded voice while his mouth flaps between poses.
+  say(text, mood, gesture = "talk", voice = []) {
+    const mouth = (ms) => this.professor.play(["talk", "idle"], { fps: 4, ms });
+    Narrator.speak(voice, gesture === "talk" ? mouth : null);
     const b = $("bubble");
     const p = $("bubble-text");
     b.className = "bubble " + (mood || "");
@@ -863,7 +867,7 @@ class Workbench {
     Sfx.play("click");
     await this.flyToSlot(btn, this.slots[this.step]);
     Sfx.play("card_right");
-    this.say(step.good, "good", "none");
+    this.say(step.good, "good", "none", [`good_${this.level.id}_${this.step}`]);
     this.professor.play(["cheer", "talk", "cheer", "idle"], { fps: 3, ms: 1700, react: "jump" });
     this.sparky.play(["dance_a", "dance_b"], { fps: 3, ms: 1500, react: "dance" });
     this.alien.play(["scared"], { ms: 1200, react: "tremble" });
@@ -885,7 +889,8 @@ class Workbench {
     this.sparky.play(["sad"], { ms: 1400, react: "droop" });
     this.alien.play(["laugh", "idle"], { fps: 5, ms: 1300, react: "giggle" });
     $("threat-fill").style.width = `${Math.min(20 + this.mistakes * 15, 90)}%`;
-    this.say(`🤔 ${CARDS[key].fact} אבל זה לא מה שצריך עכשיו. ${step.need}`, "bad", "none");
+    this.say(`🤔 ${CARDS[key].fact} אבל זה לא מה שצריך עכשיו. ${step.need}`, "bad", "none",
+             [`fact_${key}`, "not_now", `need_${this.level.id}_${this.step}`]);
     this.professor.play(["worried"], { ms: 1500, react: "tremble" });
   }
 
@@ -925,7 +930,7 @@ class Workbench {
     await wait(350);
     this.lever.show();
     Sfx.play("lever_ready");
-    this.say(this.level.leverLine, "good", "none");
+    this.say(this.level.leverLine, "good", "none", [`lever_${this.level.id}`]);
     this.professor.hold("point");
     this.professor.rig.jump(300);
     this.alien.play(["scared"], { ms: Infinity });
@@ -968,6 +973,7 @@ class Workbench {
   }
 
   stop() {
+    Narrator.stop();
     clearInterval(this.tauntTimer);
     clearInterval(this.typeTimer);
     this.busy = true;

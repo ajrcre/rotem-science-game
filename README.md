@@ -39,3 +39,16 @@ python3 tools/fetch_sounds.py promote elevenlabs     # העברה למשחק (MP
 הצלילים המסונתזים הישנים (`tools/generate_sounds.py`) נשמרו ב-`assets/sfx_synth/` לצורך השוואה.
 
 כפתור 🔊 בפינת המסך משתיק ומחזיר את הצלילים.
+
+## קריינות
+פרופסור וולט מדבר בקול "Crazy Scientist" מ-ElevenLabs (מודל `eleven_v3`, שתומך בעברית). צריך להגדיר את המשתנה `ELEVENLABS_API_KEY` בסביבה.
+הטקסטים נלקחים ישירות מ-`mockup/levels.js` (דרך node), והקבצים נשמרים ב-`assets/voice/`.
+
+```bash
+python3 tools/generate_voice.py             # רק שורות חדשות או שהשתנו
+python3 tools/generate_voice.py intro_1     # שורה מסוימת
+python3 tools/generate_voice.py --force     # הכול מחדש
+python3 tools/generate_voice.py --list      # הצגת כל השורות בלי להקליט
+```
+
+`assets/voice/manifest.json` שומר את הטקסט שממנו הוקלטה כל שורה, כך שעריכת שורה ב-`levels.js` והרצה חוזרת מקליטות רק אותה.

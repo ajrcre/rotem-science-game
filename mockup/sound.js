@@ -70,6 +70,7 @@ const Sfx = {
     this.muted = !this.muted;
     try { localStorage.setItem(this.key, this.muted ? "1" : "0"); } catch { /* not remembered */ }
     if (this.out) this.out.gain.value = this.muted ? 0 : 0.8;
+    if (this.muted) Narrator.stop();
     this.renderButton();
     this.play("click");
   },
@@ -79,5 +80,38 @@ const Sfx = {
     btn.textContent = this.muted ? "🔇" : "🔊";
     btn.setAttribute("aria-pressed", String(!this.muted));
     btn.onclick = () => this.toggle();
+  },
+};
+
+// ---------- Narration: Professor Volt's recorded lines (made by tools/generate_voice.py) ----------
+// One line at a time: a new line cuts off the old one. A list of keys plays back to back,
+// and a missing clip is simply skipped, so the game still works without recordings.
+const Narrator = {
+  dir: "../assets/voice/",
+  audio: new Audio(),
+  queue: [],
+
+  // onClip(ms) fires as each clip starts, with its length, so a mouth can flap for exactly that long.
+  speak(keys, onClip = null) {
+    this.stop();
+    this.onClip = onClip;
+    if (Sfx.muted || !Sfx.ctx) return;      // muted, or no user gesture yet (autoplay would be blocked)
+    this.queue = [...keys];
+    this.next();
+  },
+
+  next() {
+    const key = this.queue.shift();
+    if (!key) return;
+    const a = new Audio(`${this.dir}${key}.mp3`);
+    a.onplaying = () => { if (this.audio === a && isFinite(a.duration)) this.onClip?.(a.duration * 1000); };
+    a.onended = a.onerror = () => { if (this.audio === a) this.next(); };
+    this.audio = a;
+    a.play().catch(() => { if (this.audio === a) this.next(); });
+  },
+
+  stop() {
+    this.queue = [];
+    this.audio.pause();
   },
 };
