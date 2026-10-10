@@ -23,7 +23,7 @@ from typing import Callable
 import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent
-SFX_DIR = ROOT / "assets" / "sfx"
+SFX_DIR = ROOT / "assets" / "sfx_synth"   # the original synth set; the game now ships assets/sfx/*.mp3
 RATE = 22050
 
 

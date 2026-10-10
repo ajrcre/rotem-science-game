@@ -1,14 +1,17 @@
 "use strict";
 
-// ---------- Sound effects (made by tools/generate_sounds.py) ----------
+// ---------- Sound effects (ElevenLabs, shipped by tools/fetch_sounds.py promote) ----------
 // Web Audio so overlapping effects never cut each other off. The context can only start
 // after a user gesture, so the first tap/key unlocks it; anything played before is skipped.
+// Each sound has a few recorded variants (assets/sfx/variants.json); every play picks one
+// at random and nudges the pitch, so repeated sounds don't feel copy-pasted.
 const Sfx = {
   dir: "../assets/sfx/",
   key: "energy-defenders-muted",
   names: ["click", "iris", "card_right", "card_wrong", "alien_laugh", "alien_scared", "energy_flow",
           "lever_ready", "lever_pull", "ufo_arrive", "charge", "fire_laser", "fire_sonic", "fire_wind",
           "fire_water", "fire_flame", "fire_sling", "boom", "victory", "star", "quiz_right", "quiz_wrong"],
+  pitchJitter: 0.04,
   buffers: {},
   ctx: null,
   muted: false,
@@ -31,22 +34,32 @@ const Sfx = {
     this.out = this.ctx.createGain();
     this.out.gain.value = this.muted ? 0 : 0.8;
     this.out.connect(this.ctx.destination);
-    for (const name of this.names) {
-      fetch(`${this.dir}${name}.wav`)
-        .then((r) => r.arrayBuffer())
-        .then((data) => this.ctx.decodeAudioData(data))
-        .then((buf) => { this.buffers[name] = buf; })
-        .catch(() => { /* a missing sound just stays silent */ });
-    }
+    fetch(`${this.dir}variants.json`)
+      .then((r) => r.json())
+      .then((variants) => {
+        for (const name of this.names) {
+          for (const file of variants[name] || []) this.load(name, file);
+        }
+      })
+      .catch(() => { /* no list: the game just stays silent */ });
   },
 
-  play(name, { volume = 1, rate = 1 } = {}) {
-    const buf = this.buffers[name];
-    if (!buf || this.muted) return;
+  load(name, file) {
+    fetch(this.dir + file)
+      .then((r) => { if (!r.ok) throw new Error(file); return r.arrayBuffer(); })
+      .then((data) => this.ctx.decodeAudioData(data))
+      .then((buf) => { (this.buffers[name] ||= []).push(buf); })
+      .catch(() => { /* a missing variant is skipped */ });
+  },
+
+  // Pass `rate` to pin the pitch (e.g. the rising star chimes); otherwise it varies a little.
+  play(name, { volume = 1, rate } = {}) {
+    const bufs = this.buffers[name];
+    if (!bufs?.length || this.muted) return;
     if (this.ctx.state === "suspended") this.ctx.resume();
     const src = this.ctx.createBufferSource();
-    src.buffer = buf;
-    src.playbackRate.value = rate;
+    src.buffer = bufs[Math.floor(Math.random() * bufs.length)];
+    src.playbackRate.value = rate ?? 1 + (Math.random() * 2 - 1) * this.pitchJitter;
     const gain = this.ctx.createGain();
     gain.gain.value = volume;
     src.connect(gain).connect(this.out);

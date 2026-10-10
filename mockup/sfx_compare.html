@@ -41,7 +41,7 @@
 "use strict";
 // Columns: the current synth sound, then every candidate the fetch script listed in index.json.
 const COLS = [
-  { key: "current", label: "Current (synth)", path: (n) => `../assets/sfx/${n}.wav` },
+  { key: "current", label: "Old synth", path: (n) => `../assets/sfx_synth/${n}.wav` },
   { key: "elevenlabs", label: "ElevenLabs v1", path: (n) => `../assets/sfx_candidates/elevenlabs/${n}.wav` },
   { key: "elevenlabs_v2", label: "ElevenLabs v2", path: (n) => `../assets/sfx_candidates/elevenlabs/${n}_v2.wav` },
   { key: "kenney", label: "Kenney (CC0)", path: (n) => `../assets/sfx_candidates/kenney/${n}.wav` },

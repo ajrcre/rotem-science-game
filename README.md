@@ -23,24 +23,19 @@ python3 tools/generate_assets.py --force    # הכול מחדש
 הספרייטים נוצרים על רקע מג'נטה, והסקריפט מסיר את הרקע אוטומטית. הקבצים נשמרים ב-`assets/art/`.
 
 ## ייצור צלילים
-אפקטי הקול מסונתזים בקוד (numpy, בלי מפתח API) בסגנון סרטים מצוירים של שנות ה-30, ונשמרים ב-`assets/sfx/`.
+אפקטי הקול במשחק נוצרו ב-ElevenLabs (יצירת צלילים מטקסט) ונשמרים ב-`assets/sfx/` כ-MP3. לכל צליל יש שתי גרסאות, והמשחק בוחר אחת באקראי ומשנה מעט את הגובה בכל השמעה, כדי שצלילים חוזרים לא יישמעו זהים. הרשימה נמצאת ב-`assets/sfx/variants.json`.
+
+הפרומפטים נמצאים ב-`tools/sfx_manifest.json`. `tools/fetch_sounds.py` מייצר את הצלילים (דורש `ELEVENLABS_API_KEY`, ומנוי בתשלום לשימוש מסחרי), חותך שקט, ממיר למונו 44.1kHz ומאזן עוצמה. התוצאות נשמרות ב-`assets/sfx_candidates/`:
 
 ```bash
-python3 tools/generate_sounds.py            # רק צלילים חסרים
-python3 tools/generate_sounds.py boom       # צליל מסוים
-python3 tools/generate_sounds.py --force    # הכול מחדש
+python3 tools/fetch_sounds.py elevenlabs boom        # צליל חסר או מסוים
+python3 tools/fetch_sounds.py elevenlabs --force     # עיבוד מחדש מהמטמון, בלי קריאות API
+python3 tools/fetch_sounds.py elevenlabs boom --refetch   # יצירה חדשה (עולה קרדיטים)
+python3 tools/fetch_sounds.py promote elevenlabs     # העברה למשחק (MP3 + variants.json)
 ```
+
+אפשר גם להביא חלופות בקוד פתוח מ-Kenney (רישיון CC0): `python3 tools/fetch_sounds.py kenney`. את כל הגרסאות אפשר להשוות ב-`mockup/sfx_compare.html`.
+
+הצלילים המסונתזים הישנים (`tools/generate_sounds.py`) נשמרו ב-`assets/sfx_synth/` לצורך השוואה.
 
 כפתור 🔊 בפינת המסך משתיק ומחזיר את הצלילים.
-
-### צלילים מציאותיים (ניסוי)
-`tools/fetch_sounds.py` מביא צלילים חלופיים משני מקורות: ElevenLabs (יצירה מטקסט, דורש `ELEVENLABS_API_KEY` ומנוי בתשלום לשימוש מסחרי) וחבילות Kenney (רישיון CC0). הפרומפטים והמיפוי נמצאים ב-`tools/sfx_manifest.json`. כל הצלילים עוברים חיתוך שקט, המרה למונו 44.1kHz ואיזון עוצמה, ונשמרים ב-`assets/sfx_candidates/`.
-
-```bash
-python3 tools/fetch_sounds.py elevenlabs             # צלילים חסרים
-python3 tools/fetch_sounds.py kenney boom            # צליל מסוים
-python3 tools/fetch_sounds.py elevenlabs --force     # עיבוד מחדש מהמטמון, בלי קריאות API
-python3 tools/fetch_sounds.py elevenlabs --refetch   # יצירה חדשה (עולה קרדיטים)
-```
-
-להשוואה: `mockup/sfx_compare.html` מנגן את הצליל הנוכחי מול כל המועמדים ומייצא את הבחירות.

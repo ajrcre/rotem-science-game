@@ -1,0 +1,90 @@
+{
+ "click": [
+  "click.mp3",
+  "click_2.mp3"
+ ],
+ "iris": [
+  "iris.mp3",
+  "iris_2.mp3"
+ ],
+ "card_right": [
+  "card_right.mp3",
+  "card_right_2.mp3"
+ ],
+ "card_wrong": [
+  "card_wrong.mp3",
+  "card_wrong_2.mp3"
+ ],
+ "alien_laugh": [
+  "alien_laugh.mp3",
+  "alien_laugh_2.mp3"
+ ],
+ "alien_scared": [
+  "alien_scared.mp3",
+  "alien_scared_2.mp3"
+ ],
+ "energy_flow": [
+  "energy_flow.mp3",
+  "energy_flow_2.mp3"
+ ],
+ "lever_ready": [
+  "lever_ready.mp3",
+  "lever_ready_2.mp3"
+ ],
+ "lever_pull": [
+  "lever_pull.mp3",
+  "lever_pull_2.mp3"
+ ],
+ "ufo_arrive": [
+  "ufo_arrive.mp3",
+  "ufo_arrive_2.mp3"
+ ],
+ "charge": [
+  "charge.mp3",
+  "charge_2.mp3"
+ ],
+ "fire_laser": [
+  "fire_laser.mp3",
+  "fire_laser_2.mp3"
+ ],
+ "fire_sonic": [
+  "fire_sonic.mp3",
+  "fire_sonic_2.mp3"
+ ],
+ "fire_wind": [
+  "fire_wind.mp3",
+  "fire_wind_2.mp3"
+ ],
+ "fire_water": [
+  "fire_water.mp3",
+  "fire_water_2.mp3"
+ ],
+ "fire_flame": [
+  "fire_flame.mp3",
+  "fire_flame_2.mp3"
+ ],
+ "fire_sling": [
+  "fire_sling.mp3",
+  "fire_sling_2.mp3"
+ ],
+ "boom": [
+  "boom.mp3",
+  "boom_2.mp3"
+ ],
+ "victory": [
+  "victory.mp3",
+  "victory_2.mp3"
+ ],
+ "star": [
+  "star.mp3",
+  "star_2.mp3"
+ ],
+ "quiz_right": [
+  "quiz_right.mp3",
+  "quiz_right_2.mp3"
+ ],
+ "quiz_wrong": [
+  "quiz_wrong.mp3",
+  "quiz_wrong_2.mp3"
+ ]
+}

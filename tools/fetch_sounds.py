@@ -5,6 +5,7 @@ Usage:
     python3 tools/fetch_sounds.py kenney boom click     # specific Kenney (CC0) candidates
     python3 tools/fetch_sounds.py elevenlabs --force    # re-master everything from the raw cache
     python3 tools/fetch_sounds.py elevenlabs --refetch  # new generations (costs API credits)
+    python3 tools/fetch_sounds.py promote elevenlabs    # ship a source's candidates to the game
 
 Each source (Strategy pattern) only knows how to get raw audio bytes for one sound;
 SoundSource.produce (Template Method) handles variants, skipping and post-processing,
@@ -36,6 +37,7 @@ from generate_sounds import StructuredLogger  # noqa: E402
 ROOT = Path(__file__).resolve().parent.parent
 MANIFEST = ROOT / "tools" / "sfx_manifest.json"
 CANDIDATES = ROOT / "assets" / "sfx_candidates"
+GAME_SFX = ROOT / "assets" / "sfx"
 CACHE = ROOT / ".cache"
 RATE = 44100
 
@@ -226,11 +228,45 @@ def write_index(out_dir: Path, names: list[str]) -> Path:
     return path
 
 
+# ---------- Promote winners into the game ----------
+
+def promote(source_key: str, names: list[str], candidates: Path = CANDIDATES, out_dir: Path = GAME_SFX) -> Path:
+    """Encode every variant of each sound to MP3 for the game and list them in variants.json.
+
+    MP3 decodes in every browser's Web Audio; sound.js picks a random variant per play.
+    """
+    variants: dict[str, list[str]] = {}
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for name in names:
+        files = sorted((candidates / source_key).glob(f"{name}*.wav"),
+                       key=lambda p: (p.stem != name, p.stem))
+        files = [f for f in files if re.fullmatch(rf"{re.escape(name)}(_v\d+)?", f.stem)]
+        if not files:
+            logger.info("no candidate to promote", source=source_key, name=name)
+            continue
+        variants[name] = []
+        for i, src in enumerate(files, start=1):
+            target = out_dir / (f"{name}.mp3" if i == 1 else f"{name}_{i}.mp3")
+            subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(src),
+                            "-codec:a", "libmp3lame", "-b:a", "128k", str(target)], check=True)
+            variants[name].append(target.name)
+        logger.info("promoted sound", source=source_key, name=name, variants=len(files))
+    path = out_dir / "variants.json"
+    path.write_text(json.dumps(variants, indent=1) + "\n", encoding="utf-8")
+    return path
+
+
 def main(argv: list[str]) -> int:
     args = [a for a in argv if not a.startswith("--")]
     if not args:
         print(__doc__)
         return 1
+    if args[0] == "promote":
+        if len(args) < 2:
+            print(__doc__)
+            return 1
+        promote(args[1], args[2:] or list(load_manifest()))
+        return 0
     source, names = make_source(args[0]), args[1:]
     manifest = load_manifest()
     unknown = [n for n in names if n not in manifest]

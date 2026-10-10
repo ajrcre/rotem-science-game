@@ -143,3 +143,23 @@ def test_index_lists_only_matching_candidates(tmp_path):
         (tmp_path / rel).write_bytes(b"")
     index = json.loads(fs.write_index(tmp_path, ["boom", "click"]).read_text())
     assert index == {"boom": ["elevenlabs/boom.wav", "elevenlabs/boom_v2.wav", "kenney/boom.wav"], "click": []}
+
+
+@needs_ffmpeg
+def test_promote_encodes_every_variant_and_lists_them(tmp_path):
+    cand = tmp_path / "cand" / "elevenlabs"
+    cand.mkdir(parents=True)
+    for stem in ["boom", "boom_v2", "boomerang"]:
+        fs.write_wav(cand / f"{stem}.wav", _tone(0.2, fs.RATE))
+    out = tmp_path / "sfx"
+    variants = json.loads(fs.promote("elevenlabs", ["boom", "click"], tmp_path / "cand", out).read_text())
+    assert variants == {"boom": ["boom.mp3", "boom_2.mp3"]}
+    assert all((out / f).stat().st_size > 0 for f in variants["boom"])
+
+
+def test_game_ships_every_sound_it_plays():
+    sfx = ROOT / "assets" / "sfx"
+    variants = json.loads((sfx / "variants.json").read_text())
+    assert set(variants) == set(fs.load_manifest())
+    for files in variants.values():
+        assert files and all((sfx / f).is_file() for f in files)
