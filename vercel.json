@@ -1,0 +1,6 @@
+{
+  "trailingSlash": true,
+  "redirects": [
+    { "source": "/", "destination": "/mockup/", "permanent": false }
+  ]
+}

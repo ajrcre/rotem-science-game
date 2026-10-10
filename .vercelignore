@@ -1,0 +1,4 @@
+tools/
+tests/
+assets/raw/
+__pycache__/
