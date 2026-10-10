@@ -215,13 +215,12 @@ const Lab = {
     }
     this.professor.play(["walk_a", "walk_b"], { fps: 5, ms: Infinity });
     clearInterval(this.stepTimer);
-    this.stepTimer = setInterval(() => this.professor.rig.y.kick(-160), 200);   // a bounce on every step
-    Sfx.play("footsteps");
-    const again = setTimeout(() => Sfx.play("footsteps"), 1500);
+    const step = () => { this.professor.rig.y.kick(-160); Sfx.play("step", { volume: 0.8 }); };
+    step();
+    this.stepTimer = setInterval(step, 200);       // a bounce and a footstep on every step
     el.style.transition = `transform ${ms}ms linear`;
     el.style.transform = `translateX(${toX}px)${flip}`;
     await wait(ms);
-    clearTimeout(again);
     clearInterval(this.stepTimer);
     el.style.transition = "none";
     if (!back) return;

@@ -87,9 +87,9 @@
   "quiz_wrong.mp3",
   "quiz_wrong_2.mp3"
  ],
- "footsteps": [
-  "footsteps.mp3",
-  "footsteps_2.mp3"
+ "step": [
+  "step.mp3",
+  "step_2.mp3"
  ],
  "door_open": [
   "door_open.mp3",

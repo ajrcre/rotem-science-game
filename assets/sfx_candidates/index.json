@@ -103,9 +103,9 @@
   "elevenlabs/quiz_wrong_v2.wav",
   "kenney/quiz_wrong.wav"
  ],
- "footsteps": [
-  "elevenlabs/footsteps.wav",
-  "elevenlabs/footsteps_v2.wav"
+ "step": [
+  "elevenlabs/step.wav",
+  "elevenlabs/step_v2.wav"
  ],
  "door_open": [
   "elevenlabs/door_open.wav",

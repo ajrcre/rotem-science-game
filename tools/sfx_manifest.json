@@ -109,9 +109,9 @@
     "seconds": 0.7, "influence": 0.6, "level_db": -12,
     "kenney": {"pack": "interface-sounds", "file": "error_004.ogg"}
   },
-  "footsteps": {
-    "prompt": "cartoon character hurrying with quick bouncy shoe footsteps on a creaky wooden floor, four steps, playful 1930s cartoon",
-    "seconds": 1.6, "influence": 0.5, "level_db": -14,
+  "step": {
+    "prompt": "a single footstep of a leather shoe on a wooden floor, one step only, close and dry, no music, no reverb",
+    "seconds": 0.5, "influence": 0.7, "level_db": -14,
     "kenney": null
   },
   "door_open": {
