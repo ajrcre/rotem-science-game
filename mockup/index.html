@@ -28,15 +28,36 @@
       <div class="threat-bar"><div class="threat-fill" id="threat-fill"></div></div>
     </div>
 
-    <img class="sprite alien boil" id="alien" src="../assets/art/alien.png" alt="חייזר">
+    <div class="actor alien" id="alien"><img class="boil" alt="חייזר"></div>
 
     <!-- Energy chain -->
     <div class="chain" id="chain"></div>
 
     <!-- Characters -->
-    <img class="sprite professor boil" id="professor" src="../assets/art/professor.png" alt="פרופסור וולט">
+    <div class="actor professor" id="professor"><img class="boil" alt="פרופסור וולט"></div>
     <div class="bubble" id="bubble"><p id="bubble-text"></p></div>
-    <img class="sprite sparky boil" id="sparky" src="../assets/art/sparky.png" alt="ספארקי">
+    <div class="actor sparky" id="sparky"><img class="boil" alt="ספארקי"></div>
+
+    <!-- Lever (appears when the chain is complete) -->
+    <div class="lever" id="lever">
+      <div class="lever-hint" id="lever-hint">גררו למטה!</div>
+      <div class="lever-handle" id="lever-handle" role="button" aria-label="ידית – גררו למטה"><svg viewBox="0 0 120 300">
+        <defs>
+          <linearGradient id="rod" x1="0" x2="1">
+            <stop offset="0" stop-color="#8a5a24"/><stop offset=".35" stop-color="#f1c66e"/>
+            <stop offset=".7" stop-color="#c08a3e"/><stop offset="1" stop-color="#6e4519"/>
+          </linearGradient>
+          <radialGradient id="knob" cx=".35" cy=".3" r=".75">
+            <stop offset="0" stop-color="#ffb3a0"/><stop offset=".35" stop-color="#e2412f"/>
+            <stop offset="1" stop-color="#7d1810"/>
+          </radialGradient>
+        </defs>
+        <rect x="48" y="58" width="24" height="236" rx="10" fill="url(#rod)" stroke="#1c1410" stroke-width="6"/>
+        <circle cx="60" cy="52" r="46" fill="url(#knob)" stroke="#1c1410" stroke-width="7"/>
+        <ellipse cx="44" cy="34" rx="13" ry="8" fill="#fff" opacity=".8" transform="rotate(-30 44 34)"/>
+      </svg></div>
+      <img class="lever-base" src="../assets/art/lever_base.png" alt="">
+    </div>
 
     <!-- Card tray -->
     <div class="tray">
@@ -47,6 +68,19 @@
     <!-- Laser beam / FX layer -->
     <div class="beam" id="beam"></div>
     <div class="flash" id="flash"></div>
+
+    <!-- Porthole cutscene -->
+    <div class="window-scene" id="window-scene">
+      <div class="porthole-view">
+        <img class="sky" src="../assets/art/night_sky.jpg" alt="">
+        <img class="ufo" id="ufo" src="../assets/art/alien.png" alt="">
+        <div class="space-beam" id="space-beam"></div>
+        <img class="boom" id="boom" src="../assets/art/explosion.png" alt="">
+        <div id="debris"></div>
+      </div>
+      <img class="porthole-frame" src="../assets/art/porthole.png" alt="">
+      <div class="boom-word" id="boom-word">בּוּם!</div>
+    </div>
 
     <!-- Victory screen -->
     <div class="victory" id="victory">

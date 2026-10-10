@@ -81,13 +81,19 @@ class KeepAsIs(PostProcessor):
 class ChromaKeyCutout(PostProcessor):
     """Remove the flat magenta background, despill edges and crop to content."""
 
-    def __init__(self, hard: float = 90.0, soft: float = 170.0, max_side: int = 1024) -> None:
+    def __init__(self, hard: float = 90.0, soft: float = 170.0, max_side: int = 1024,
+                 drop_islands: bool = False) -> None:
         self.hard, self.soft, self.max_side = hard, soft, max_side
+        self.drop_islands = drop_islands
 
     def process(self, image: Image.Image) -> Image.Image:
         rgb = np.asarray(image.convert("RGB")).astype(np.float32)
         dist = np.linalg.norm(rgb - np.array(CHROMA, dtype=np.float32), axis=-1)
         alpha = np.clip((dist - self.hard) / (self.soft - self.hard), 0.0, 1.0)
+        # Ghost limbs from the reference image come out as faint magenta-tinted shapes: drop them.
+        alpha *= 1.0 - self._ghost_mask(rgb)
+        if self.drop_islands:
+            alpha *= self._island_mask(alpha)
         # Despill: pull magenta tint out of semi-transparent edge pixels.
         r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
         spill = np.clip(np.minimum(r, b) - g, 0, None) * (1.0 - alpha)
@@ -102,6 +108,45 @@ class ChromaKeyCutout(PostProcessor):
                             min(bbox[2] + pad, out.width), min(bbox[3] + pad, out.height)))
         out.thumbnail((self.max_side, self.max_side), Image.LANCZOS)
         return out
+
+
+    @staticmethod
+    def _island_mask(alpha: np.ndarray, grid: int = 256) -> np.ndarray:
+        """Remove detached mid-sized blobs (stray hands); keep the body and tiny bits like sparks."""
+        h, w = alpha.shape
+        small = np.asarray(Image.fromarray((alpha > 0.3).astype(np.uint8) * 255)
+                           .resize((grid, grid), Image.NEAREST)) > 0
+        labels = np.zeros(small.shape, dtype=np.int32)
+        sizes = [0]
+        for y0, x0 in zip(*np.nonzero(small)):
+            if labels[y0, x0]:
+                continue
+            label, stack, count = len(sizes), [(y0, x0)], 0
+            labels[y0, x0] = label
+            while stack:
+                y, x = stack.pop()
+                count += 1
+                for ny, nx in ((y + 1, x), (y - 1, x), (y, x + 1), (y, x - 1)):
+                    if 0 <= ny < grid and 0 <= nx < grid and small[ny, nx] and not labels[ny, nx]:
+                        labels[ny, nx] = label
+                        stack.append((ny, nx))
+            sizes.append(count)
+        biggest = max(sizes)
+        drop = [i for i, n in enumerate(sizes) if i and 0.006 * biggest < n < 0.25 * biggest]
+        if not drop:
+            return np.ones_like(alpha)
+        mask = Image.fromarray(np.isin(labels, drop).astype(np.uint8) * 255).resize((w, h), Image.BILINEAR)
+        return 1.0 - (np.asarray(mask) > 0).astype(np.float32)
+
+    @staticmethod
+    def _ghost_mask(rgb: np.ndarray) -> np.ndarray:
+        """1.0 where a pixel is magenta-pink (hue ~285-345 deg) - a color our palette never uses."""
+        r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+        mx, mn = rgb.max(axis=-1), rgb.min(axis=-1)
+        sat = (mx - mn) / np.maximum(mx, 1.0)
+        hue = (np.degrees(np.arctan2(np.sqrt(3.0) * (g - b), 2.0 * r - g - b)) + 360.0) % 360.0
+        in_band = np.clip(np.minimum(hue - 280.0, 350.0 - hue) / 10.0, 0.0, 1.0)
+        return in_band * np.clip((sat - 0.12) / 0.08, 0.0, 1.0)
 
 
 class ResizeBackground(PostProcessor):
@@ -123,10 +168,13 @@ class AssetSpec:
     aspect: str = "1:1"
     kind: str = "sprite"  # sprite | background
     references: list[str] = field(default_factory=list)
+    drop_islands: bool = False
 
     @property
     def processor(self) -> PostProcessor:
-        return ChromaKeyCutout() if self.kind == "sprite" else ResizeBackground()
+        if self.kind == "sprite":
+            return ChromaKeyCutout(drop_islands=self.drop_islands)
+        return ResizeBackground()
 
     @property
     def extension(self) -> str:
@@ -179,8 +227,48 @@ ASSETS: list[AssetSpec] = [
     sprite("electricity", "A yellow zig-zag lightning bolt character with a cheeky face, rubber hose arms and legs, no glow or halo around it."),
     sprite("heat", "A cheerful cartoon flame character, orange and red, rubber hose style."),
     sprite("light", "A vintage incandescent light bulb character with a happy face, little yellow light rays drawn as ink strokes, rubber hose arms and legs. The background must be solid magenta, not white."),
+    sprite("lever_base", "A chunky 1930s control panel box for a big lever switch: riveted brass and dark "
+           "wood housing, a vertical slot on top where a lever goes, two round dial gauges and a red "
+           "and green indicator bulb on the front, a cute face on the front plate. No lever handle."),
+    sprite("porthole", "A big round riveted brass ship porthole window frame seen straight on, thick ring "
+           "with bolts and a hinge on one side. The glass area inside the ring is completely empty solid "
+           "magenta, same as the background."),
+    AssetSpec(
+        "night_sky",
+        "Wide background painting of a starry night sky seen from a laboratory window: big cartoon moon "
+        "with a sleepy face, twinkling stars, soft swirling clouds, and a tiny 1930s town skyline with "
+        "water tower and chimneys silhouetted at the bottom. No spaceships, no characters.",
+        aspect="16:9", kind="background", references=["professor"],
+    ),
+    sprite("explosion", "A huge cartoon explosion burst: puffy round billowing smoke clouds in orange, "
+           "yellow and cream with a jagged starburst flash in the middle, little debris bits and "
+           "spinning stars around it, classic 1930s animation explosion, no text."),
     sprite("laser", "A big retro ray-gun laser cannon on wheels, brass and red, with coils and a glass "
            "lens at the barrel, cartoon 1930s sci-fi weapon, no characters."),
+]
+POSE_PREFIX = ("The exact same character as in the reference image - identical design, face, colors, "
+               "proportions and outfit - redrawn in a new pose: ")
+POSE_SUFFIX = (" Exactly two arms and two legs. Do not keep any limb from the reference pose and do not draw "
+               "faint, transparent or ghosted copies of limbs.")
+
+
+def pose(base: str, name: str, prompt: str) -> AssetSpec:
+    return AssetSpec(f"{base}_{name}", POSE_PREFIX + prompt + POSE_SUFFIX, aspect="3:4" if base == "professor" else "1:1",
+                     references=[base], drop_islands=base == "professor")
+
+
+ASSETS += [
+    pose("professor", "talk", "talking excitedly with mouth wide open, both gloved hands spread out gesturing, eyebrows up."),
+    pose("professor", "cheer", "jumping for joy with both arms thrown up in the air, huge open-mouth grin, knees bent, hair crackling."),
+    pose("professor", "worried", "worried and nervous, both hands grabbing his cheeks, eyes wide, mouth wavy, sweat drops flying."),
+    pose("professor", "point", "pointing excitedly down and to the side with one long arm, his other hand resting on his hip, leaning forward, mouth open shouting. No raised hand."),
+    pose("sparky", "dance_a", "dancing a happy jig, left leg kicked high, arms swinging out, eyes closed in joy, big smile."),
+    pose("sparky", "dance_b", "dancing a happy jig, right leg kicked high, arms swinging the other way, mouth open singing."),
+    pose("sparky", "sad", "sad and deflated, slumped shoulders, prongs drooping, teary eyes, frown, arms hanging."),
+    pose("sparky", "pull", "leaning far back pulling something heavy downward with both gloved hands raised above his head, straining face, gritted teeth."),
+    pose("sparky", "cheer", "leaping in the air with both fists raised in victory, legs tucked, huge grin."),
+    pose("alien", "laugh", "laughing hysterically in the flying saucer, head thrown back, eyes squeezed shut, tentacles clutching its belly, tears of laughter."),
+    pose("alien", "scared", "terrified in the flying saucer, three eyes bulging huge, tentacles thrown up, teeth chattering, sweat drops."),
 ]
 ASSETS_BY_NAME = {a.name: a for a in ASSETS}
 
