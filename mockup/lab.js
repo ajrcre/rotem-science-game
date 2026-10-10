@@ -55,24 +55,25 @@ const Screens = {
   },
 };
 
-// ---------- Splash: the title card for a few seconds; a tap skips it ----------
+// ---------- Splash: the title card, waiting for a tap ----------
+// Browsers keep a page silent until the first tap/click/key, so the splash asks for one: it opens
+// the sound for everything after it (the professor greets you in the lab).
 const Splash = {
-  ms: 3800,
-
   show() {
     $("splash").classList.add("show");
     this.actor ??= new Actor("professor", "splash-professor");
     this.actor.reset();
     setTimeout(() => this.actor.play(["cheer", "idle"], { fps: 3, ms: 1400, react: "jump" }), 900);
-    const next = () => {
-      clearTimeout(this.timer);
-      removeEventListener("pointerdown", next);
-      removeEventListener("keydown", next);
+    const enter = (e) => {
+      if (e.type === "keydown" && !["Enter", " "].includes(e.key)) return;
+      if (e.target.closest?.("#btn-sound")) return;     // muting on the splash shouldn't leave it
+      removeEventListener("click", enter);
+      removeEventListener("keydown", enter);
       if (Screens.current === "splash") Screens.go("lab");
     };
-    this.timer = setTimeout(next, this.ms);
-    addEventListener("pointerdown", next);
-    addEventListener("keydown", next);
+    addEventListener("click", enter);
+    addEventListener("keydown", enter);
+    setTimeout(() => $("btn-enter").focus({ preventScroll: true }), 1800);
   },
 
   hide() { $("splash").classList.remove("show"); },

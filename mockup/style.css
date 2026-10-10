@@ -473,9 +473,12 @@ body { font-family: var(--font-body); color: var(--ink); }
   border: 5px solid var(--ink); border-radius: 16px; text-shadow: 2px 2px 0 var(--ink);
   animation: pop .5s cubic-bezier(.3,1.8,.5,1) 1s backwards; }
 .splash-professor { left: 30px; bottom: -30px; width: 380px; height: 541px; animation: walk-in 1s cubic-bezier(.3,1.3,.5,1) .5s backwards; }
-.splash-tap { position: absolute; bottom: 34px; left: 50%; transform: translateX(-50%); margin: 0;
-  font: 28px var(--font-title); color: var(--paper); text-shadow: 2px 2px 0 var(--ink);
-  animation: fade-in .5s 1.8s backwards, nudge 1.2s ease-in-out 1.8s infinite; }
+.splash-enter { position: absolute; bottom: 40px; left: 50%; translate: -50% 0; cursor: pointer; white-space: nowrap;
+  font: 44px var(--font-title); color: var(--paper); background: var(--good); padding: 8px 46px 12px;
+  border: 6px solid var(--ink); border-radius: 22px; box-shadow: 0 8px 0 var(--ink); text-shadow: 3px 3px 0 var(--ink);
+  animation: pop .5s cubic-bezier(.3,1.8,.5,1) 1.6s backwards, pulse 1.2s ease-in-out 2.1s infinite; }
+.splash-enter:hover { background: #5fa147; }
+.splash-enter:focus-visible { outline: 5px dashed var(--glow); outline-offset: 6px; }
 
 /* The workbench's animated, filtered actors are covered by these screens: don't paint them. */
 #stage:is([data-screen="splash"], [data-screen="lab"]) :is(#professor, #sparky, #alien) { visibility: hidden; }

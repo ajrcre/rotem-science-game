@@ -1,8 +1,9 @@
 "use strict";
 
 // ---------- Sound effects (ElevenLabs, shipped by tools/fetch_sounds.py promote) ----------
-// Web Audio so overlapping effects never cut each other off. The context can only start
-// after a user gesture, so the first tap/key unlocks it; anything played before is skipped.
+// Web Audio so overlapping effects never cut each other off. Browsers only let sound start after a
+// tap/click/key, so the context is created (suspended) and every effect is decoded at page load,
+// and the first gesture resumes it; anything played before that is skipped.
 // Each sound has a few recorded variants (assets/sfx/variants.json); every play picks one
 // at random and nudges the pitch, so repeated sounds don't feel copy-pasted.
 const Sfx = {
@@ -15,26 +16,32 @@ const Sfx = {
   pitchJitter: 0.04,
   buffers: {},
   ctx: null,
+  unlocked: false,
   muted: false,
 
   init() {
     try { this.muted = localStorage.getItem(this.key) === "1"; } catch { /* storage blocked: start unmuted */ }
     this.renderButton();
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) {
+      this.ctx = new AC();
+      this.out = this.ctx.createGain();
+      this.out.gain.value = this.muted ? 0 : 0.8;
+      this.out.connect(this.ctx.destination);
+      this.preload();
+    }
+    // Safari only counts touchend/click as a gesture for audio; Chrome is happy with pointerdown.
     const unlock = () => this.unlock();
-    addEventListener("pointerdown", unlock, { once: true, capture: true });
-    addEventListener("keydown", unlock, { once: true, capture: true });
+    for (const type of ["pointerdown", "touchend", "click", "keydown"]) addEventListener(type, unlock, { capture: true });
+    this.stopListening = () => {
+      for (const type of ["pointerdown", "touchend", "click", "keydown"]) removeEventListener(type, unlock, { capture: true });
+    };
     document.addEventListener("click", (e) => {
       if (e.target.closest(".btn, .hud-btn, .level-card")) this.play("click");
     });
   },
 
-  unlock() {
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC || this.ctx) return;
-    this.ctx = new AC();
-    this.out = this.ctx.createGain();
-    this.out.gain.value = this.muted ? 0 : 0.8;
-    this.out.connect(this.ctx.destination);
+  preload() {
     fetch(`${this.dir}variants.json`)
       .then((r) => r.json())
       .then((variants) => {
@@ -43,6 +50,15 @@ const Sfx = {
         }
       })
       .catch(() => { /* no list: the game just stays silent */ });
+  },
+
+  // Called inside the user's gesture: that is the only moment a browser lets audio start.
+  unlock() {
+    if (!this.ctx) return;
+    this.unlocked = true;                       // resuming inside a gesture succeeds; sounds may start now
+    this.ctx.resume().then(() => {
+      if (this.ctx.state === "running") this.stopListening();
+    }).catch(() => { /* still suspended: the next gesture tries again */ });
   },
 
   load(name, file) {
@@ -56,7 +72,7 @@ const Sfx = {
   // Pass `rate` to pin the pitch (e.g. the rising star chimes); otherwise it varies a little.
   play(name, { volume = 1, rate } = {}) {
     const bufs = this.buffers[name];
-    if (!bufs?.length || this.muted) return;
+    if (!bufs?.length || this.muted || !this.unlocked) return;
     if (this.ctx.state === "suspended") this.ctx.resume();
     const src = this.ctx.createBufferSource();
     src.buffer = bufs[Math.floor(Math.random() * bufs.length)];
@@ -84,21 +100,25 @@ const Sfx = {
   },
 };
 
-// ---------- Narration: Professor Volt's recorded lines (made by tools/generate_voice.py) ----------
+// ---------- Narration: the professor's recorded lines (made by tools/generate_voice.py) ----------
 // One line at a time: a new line cuts off the old one. A list of keys plays back to back,
 // and a missing clip is simply skipped, so the game still works without recordings.
+// Clips play through the same Web Audio context as the effects (HTML <audio> started after a delay
+// is blocked by Safari), are fetched on demand and cached.
 // speak() returns a promise that settles when the lines are over (finished, cut off, or silent).
 const Narrator = {
   dir: "../assets/voice/",
-  audio: new Audio(),
   queue: [],
+  clips: new Map(),
+  src: null,
+  turn: 0,                   // bumps on every stop, so a clip still loading knows it was cancelled
 
   // onClip(ms) fires as each clip starts, with its length, so a mouth can flap for exactly that long.
   speak(keys, onClip = null) {
     this.stop();
     this.onClip = onClip;
     const done = new Promise((resolve) => { this.resolve = resolve; });
-    if (Sfx.muted || !Sfx.ctx) { this.finish(); return done; }   // muted, or no user gesture yet (autoplay would be blocked)
+    if (Sfx.muted || !Sfx.unlocked) { this.finish(); return done; }   // muted, or no gesture yet (browser blocks audio)
     this.queue = [...keys];
     this.next();
     return done;
@@ -109,19 +129,42 @@ const Narrator = {
     this.resolve = null;
   },
 
+  clip(key) {
+    if (!this.clips.has(key)) {
+      this.clips.set(key, fetch(`${this.dir}${key}.mp3`)
+        .then((r) => { if (!r.ok) throw new Error(key); return r.arrayBuffer(); })
+        .then((data) => Sfx.ctx.decodeAudioData(data))
+        .catch(() => null));
+    }
+    return this.clips.get(key);
+  },
+
   next() {
     const key = this.queue.shift();
     if (!key) { this.finish(); return; }
-    const a = new Audio(`${this.dir}${key}.mp3`);
-    a.onplaying = () => { if (this.audio === a && isFinite(a.duration)) this.onClip?.(a.duration * 1000); };
-    a.onended = a.onerror = () => { if (this.audio === a) this.next(); };
-    this.audio = a;
-    a.play().catch(() => { if (this.audio === a) this.next(); });
+    const turn = this.turn;
+    this.clip(key).then((buf) => {
+      if (turn !== this.turn) return;
+      if (!buf) { this.next(); return; }
+      const src = Sfx.ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(Sfx.out);
+      src.onended = () => { if (this.src === src) { this.src = null; this.next(); } };
+      this.src = src;
+      src.start();
+      this.onClip?.(buf.duration * 1000);
+    });
   },
 
   stop() {
     this.queue = [];
-    this.audio.pause();
+    this.turn += 1;
+    if (this.src) {
+      const src = this.src;
+      this.src = null;
+      src.onended = null;
+      try { src.stop(); } catch { /* already stopped */ }
+    }
     this.finish();
   },
 };
