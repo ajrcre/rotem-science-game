@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sound A/B</title>
+<style>
+  :root { --bg: #fdf8ee; --fg: #2b2118; --muted: #8a7a68; --line: #e6dccb; --accent: #d9622b; --pick: #fde3d3; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #1d1915; --fg: #f1e9dc; --muted: #a8998a; --line: #3a322a; --accent: #f08a50; --pick: #4a2e1f; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 16px; background: var(--bg); color: var(--fg);
+         font: 15px/1.4 system-ui, sans-serif; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  p { margin: 0 0 16px; color: var(--muted); }
+  .wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 560px; }
+  th, td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  td.name { font-family: ui-monospace, monospace; }
+  label { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 6px; cursor: pointer; }
+  label:has(input:checked) { background: var(--pick); }
+  button { font: inherit; border: 1px solid var(--line); background: transparent; color: var(--fg);
+           border-radius: 6px; padding: 2px 10px; cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  .none { color: var(--muted); }
+  .bar { display: flex; gap: 8px; margin: 16px 0; flex-wrap: wrap; }
+  .bar button { padding: 6px 14px; }
+  textarea { width: 100%; height: 160px; font: 12px ui-monospace, monospace; background: transparent;
+             color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 8px; }
+</style>
+</head>
+<body>
+<h1>Sound effects A/B</h1>
+<p>Play each candidate and pick a winner per row. Picks are saved in this browser. Press <b>Export picks</b> and paste the JSON back to Claude.</p>
+<div class="wrap"><table id="grid"><thead></thead><tbody></tbody></table></div>
+<div class="bar"><button id="play-row-all">Play all picks in order</button><button id="export">Export picks</button></div>
+<textarea id="out" readonly hidden></textarea>
+<script>
+"use strict";
+// Columns: the current synth sound, then every candidate the fetch script listed in index.json.
+const COLS = [
+  { key: "current", label: "Current (synth)", path: (n) => `../assets/sfx/${n}.wav` },
+  { key: "elevenlabs", label: "ElevenLabs v1", path: (n) => `../assets/sfx_candidates/elevenlabs/${n}.wav` },
+  { key: "elevenlabs_v2", label: "ElevenLabs v2", path: (n) => `../assets/sfx_candidates/elevenlabs/${n}_v2.wav` },
+  { key: "kenney", label: "Kenney (CC0)", path: (n) => `../assets/sfx_candidates/kenney/${n}.wav` },
+];
+const STORE = "sfx-compare-picks";
+let picks = {};
+try { picks = JSON.parse(localStorage.getItem(STORE)) || {}; } catch { /* not remembered */ }
+const save = () => { try { localStorage.setItem(STORE, JSON.stringify(picks)); } catch { /* not remembered */ } };
+
+let playing = null;
+function play(src) {
+  if (playing) playing.pause();
+  playing = new Audio(src);
+  playing.play();
+  return playing;
+}
+
+fetch("../assets/sfx_candidates/index.json").then((r) => r.json()).then((index) => {
+  const has = (name, col) => col.key === "current" ||
+    index[name].includes(col.path(name).replace("../assets/sfx_candidates/", ""));
+  document.querySelector("#grid thead").innerHTML =
+    `<tr><th>Sound</th>${COLS.map((c) => `<th>${c.label}</th>`).join("")}</tr>`;
+  const body = document.querySelector("#grid tbody");
+  for (const name of Object.keys(index)) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td class="name">${name}</td>` + COLS.map((c) => has(name, c)
+      ? `<td><label><input type="radio" name="${name}" value="${c.key}"><button data-src="${c.path(name)}">▶</button></label></td>`
+      : `<td class="none">—</td>`).join("");
+    const chosen = tr.querySelector(`input[value="${picks[name] || "current"}"]`);
+    if (chosen) chosen.checked = true;
+    body.append(tr);
+  }
+  body.addEventListener("click", (e) => {
+    const btn = e.target.closest("button");
+    if (btn) { e.preventDefault(); play(btn.dataset.src); btn.closest("label").querySelector("input").click(); }
+  });
+  body.addEventListener("change", (e) => { picks[e.target.name] = e.target.value; save(); });
+
+  document.getElementById("export").onclick = () => {
+    const all = Object.fromEntries(Object.keys(index).map((n) => [n, picks[n] || "current"]));
+    const out = document.getElementById("out");
+    out.hidden = false;
+    out.value = JSON.stringify(all, null, 1);
+    out.select();
+  };
+  document.getElementById("play-row-all").onclick = async () => {
+    for (const name of Object.keys(index)) {
+      const col = COLS.find((c) => c.key === (picks[name] || "current"));
+      const a = play(col.path(name));
+      await new Promise((ok) => { a.onended = ok; a.onerror = ok; });
+      await new Promise((ok) => setTimeout(ok, 250));
+    }
+  };
+}).catch(() => {
+  document.querySelector("#grid tbody").innerHTML =
+    `<tr><td>No candidates yet: run <code>python3 tools/fetch_sounds.py elevenlabs</code> and <code>... kenney</code>.</td></tr>`;
+});
+</script>
+</body>
+</html>

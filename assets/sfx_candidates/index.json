@@ -1,0 +1,106 @@
+{
+ "click": [
+  "elevenlabs/click.wav",
+  "elevenlabs/click_v2.wav",
+  "kenney/click.wav"
+ ],
+ "iris": [
+  "elevenlabs/iris.wav",
+  "elevenlabs/iris_v2.wav",
+  "kenney/iris.wav"
+ ],
+ "card_right": [
+  "elevenlabs/card_right.wav",
+  "elevenlabs/card_right_v2.wav",
+  "kenney/card_right.wav"
+ ],
+ "card_wrong": [
+  "elevenlabs/card_wrong.wav",
+  "elevenlabs/card_wrong_v2.wav",
+  "kenney/card_wrong.wav"
+ ],
+ "alien_laugh": [
+  "elevenlabs/alien_laugh.wav",
+  "elevenlabs/alien_laugh_v2.wav"
+ ],
+ "alien_scared": [
+  "elevenlabs/alien_scared.wav",
+  "elevenlabs/alien_scared_v2.wav"
+ ],
+ "energy_flow": [
+  "elevenlabs/energy_flow.wav",
+  "elevenlabs/energy_flow_v2.wav",
+  "kenney/energy_flow.wav"
+ ],
+ "lever_ready": [
+  "elevenlabs/lever_ready.wav",
+  "elevenlabs/lever_ready_v2.wav",
+  "kenney/lever_ready.wav"
+ ],
+ "lever_pull": [
+  "elevenlabs/lever_pull.wav",
+  "elevenlabs/lever_pull_v2.wav",
+  "kenney/lever_pull.wav"
+ ],
+ "ufo_arrive": [
+  "elevenlabs/ufo_arrive.wav",
+  "elevenlabs/ufo_arrive_v2.wav",
+  "kenney/ufo_arrive.wav"
+ ],
+ "charge": [
+  "elevenlabs/charge.wav",
+  "elevenlabs/charge_v2.wav",
+  "kenney/charge.wav"
+ ],
+ "fire_laser": [
+  "elevenlabs/fire_laser.wav",
+  "elevenlabs/fire_laser_v2.wav",
+  "kenney/fire_laser.wav"
+ ],
+ "fire_sonic": [
+  "elevenlabs/fire_sonic.wav",
+  "elevenlabs/fire_sonic_v2.wav"
+ ],
+ "fire_wind": [
+  "elevenlabs/fire_wind.wav",
+  "elevenlabs/fire_wind_v2.wav"
+ ],
+ "fire_water": [
+  "elevenlabs/fire_water.wav",
+  "elevenlabs/fire_water_v2.wav"
+ ],
+ "fire_flame": [
+  "elevenlabs/fire_flame.wav",
+  "elevenlabs/fire_flame_v2.wav",
+  "kenney/fire_flame.wav"
+ ],
+ "fire_sling": [
+  "elevenlabs/fire_sling.wav",
+  "elevenlabs/fire_sling_v2.wav"
+ ],
+ "boom": [
+  "elevenlabs/boom.wav",
+  "elevenlabs/boom_v2.wav",
+  "kenney/boom.wav"
+ ],
+ "victory": [
+  "elevenlabs/victory.wav",
+  "elevenlabs/victory_v2.wav",
+  "kenney/victory.wav"
+ ],
+ "star": [
+  "elevenlabs/star.wav",
+  "elevenlabs/star_v2.wav",
+  "kenney/star.wav"
+ ],
+ "quiz_right": [
+  "elevenlabs/quiz_right.wav",
+  "elevenlabs/quiz_right_v2.wav",
+  "kenney/quiz_right.wav"
+ ],
+ "quiz_wrong": [
+  "elevenlabs/quiz_wrong.wav",
+  "elevenlabs/quiz_wrong_v2.wav",
+  "kenney/quiz_wrong.wav"
+ ]
+}

@@ -32,3 +32,15 @@ python3 tools/generate_sounds.py --force    # הכול מחדש
 ```
 
 כפתור 🔊 בפינת המסך משתיק ומחזיר את הצלילים.
+
+### צלילים מציאותיים (ניסוי)
+`tools/fetch_sounds.py` מביא צלילים חלופיים משני מקורות: ElevenLabs (יצירה מטקסט, דורש `ELEVENLABS_API_KEY` ומנוי בתשלום לשימוש מסחרי) וחבילות Kenney (רישיון CC0). הפרומפטים והמיפוי נמצאים ב-`tools/sfx_manifest.json`. כל הצלילים עוברים חיתוך שקט, המרה למונו 44.1kHz ואיזון עוצמה, ונשמרים ב-`assets/sfx_candidates/`.
+
+```bash
+python3 tools/fetch_sounds.py elevenlabs             # צלילים חסרים
+python3 tools/fetch_sounds.py kenney boom            # צליל מסוים
+python3 tools/fetch_sounds.py elevenlabs --force     # עיבוד מחדש מהמטמון, בלי קריאות API
+python3 tools/fetch_sounds.py elevenlabs --refetch   # יצירה חדשה (עולה קרדיטים)
+```
+
+להשוואה: `mockup/sfx_compare.html` מנגן את הצליל הנוכחי מול כל המועמדים ומייצא את הבחירות.
