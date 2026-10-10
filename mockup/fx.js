@@ -112,21 +112,32 @@ const WEAPON_STYLES = {
     const { ang, len, cos, sin, fade } = geometry(b, t);
     b.waves ??= [];
     b.next ??= 0;
-    if (t >= b.next && t < b.ms - 350) { b.waves.push(t); b.next = t + 80; }
-    fx.glow(b.from.x, b.from.y, 120, [[0, `rgba(160,240,255,${0.5 * fade})`], [1, "rgba(80,200,255,0)"]]);
+    if (t >= b.next && t < b.ms - 350) { b.waves.push(t); b.next = t + 70; }
+    fx.glow(b.from.x, b.from.y, 160, [[0, `rgba(170,240,255,${0.65 * fade})`], [1, "rgba(80,200,255,0)"]]);
+    const nx = -sin, ny = cos;
+    const cone = ctx.createLinearGradient(b.from.x, b.from.y, b.to.x, b.to.y);
+    cone.addColorStop(0, `rgba(120,220,255,${0.22 * fade})`);
+    cone.addColorStop(1, `rgba(120,220,255,${0.08 * fade})`);
+    ctx.fillStyle = cone;
+    ctx.beginPath();
+    ctx.moveTo(b.from.x + nx * 20, b.from.y + ny * 20);
+    ctx.lineTo(b.to.x + nx * 110, b.to.y + ny * 110);
+    ctx.lineTo(b.to.x - nx * 110, b.to.y - ny * 110);
+    ctx.lineTo(b.from.x - nx * 20, b.from.y - ny * 20);
+    ctx.fill();
     ctx.lineCap = "round";
     for (const w0 of b.waves) {
       const u = (t - w0) / 430;
       if (u < 0 || u > 1) continue;
       const px = b.from.x + cos * len * u, py = b.from.y + sin * len * u;
-      const r = 16 + 70 * u;
-      ctx.strokeStyle = `rgba(80,210,255,${0.6 * (1 - u * 0.6)})`;
-      ctx.lineWidth = 14 * (1 - u) + 4;
+      const r = 26 + 110 * u;
       ctx.beginPath();
-      ctx.arc(px - cos * r, py - sin * r, r, ang - 0.9, ang + 0.9);
+      ctx.arc(px - cos * r, py - sin * r, r, ang - 1.05, ang + 1.05);
+      ctx.strokeStyle = `rgba(60,200,255,${0.75 * (1 - u * 0.5)})`;
+      ctx.lineWidth = 20 * (1 - u) + 6;
       ctx.stroke();
-      ctx.strokeStyle = `rgba(255,255,255,${0.95 * (1 - u * 0.5)})`;
-      ctx.lineWidth = 3;
+      ctx.strokeStyle = `rgba(255,255,255,${(1 - u * 0.4)})`;
+      ctx.lineWidth = 5;
       ctx.stroke();
     }
     if (t > 430) {
@@ -141,15 +152,15 @@ const WEAPON_STYLES = {
     const { len, cos, sin, fade } = geometry(b, t);
     b.gusts ??= [];
     if (t < b.ms - 300) {
-      for (let i = 0; i < 5; i++) {
-        b.gusts.push({ d: 0, off: rand(-1, 1), speed: rand(650, 1050), phase: rand(0, TAU), leaf: Math.random() < 0.15 });
+      for (let i = 0; i < 9; i++) {
+        b.gusts.push({ d: 0, off: rand(-1, 1), speed: rand(650, 1050), phase: rand(0, TAU), leaf: Math.random() < 0.2 });
       }
     }
     // Faint cone of moving air.
     const nx = -sin, ny = cos;
     const g = ctx.createLinearGradient(b.from.x, b.from.y, b.to.x, b.to.y);
-    g.addColorStop(0, `rgba(230,245,255,${0.18 * fade})`);
-    g.addColorStop(1, `rgba(230,245,255,${0.06 * fade})`);
+    g.addColorStop(0, `rgba(230,245,255,${0.3 * fade})`);
+    g.addColorStop(1, `rgba(230,245,255,${0.12 * fade})`);
     ctx.fillStyle = g;
     ctx.beginPath();
     ctx.moveTo(b.from.x + nx * 14, b.from.y + ny * 14);
@@ -174,18 +185,21 @@ const WEAPON_STYLES = {
         ctx.rotate(gst.d * 0.05);
         ctx.fillStyle = `rgba(150,200,90,${alpha})`;
         ctx.beginPath();
-        ctx.ellipse(0, 0, 9, 4, 0, 0, TAU);
+        ctx.ellipse(0, 0, 12, 5, 0, 0, TAU);
         ctx.fill();
         ctx.restore();
         continue;
       }
       ctx.beginPath();
-      for (let k = 0; k <= 6; k++) {
-        const [x, y] = at(gst, Math.max(0, gst.d - k * 12));
+      for (let k = 0; k <= 9; k++) {
+        const [x, y] = at(gst, Math.max(0, gst.d - k * 15));
         k ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
       }
-      ctx.strokeStyle = `rgba(240,250,255,${0.75 * alpha})`;
-      ctx.lineWidth = 3;
+      ctx.strokeStyle = `rgba(160,200,235,${0.45 * alpha})`;
+      ctx.lineWidth = 9;
+      ctx.stroke();
+      ctx.strokeStyle = `rgba(255,255,255,${0.95 * alpha})`;
+      ctx.lineWidth = 4;
       ctx.stroke();
     }
   },
@@ -388,7 +402,7 @@ class WeaponFX {
     ctx.globalCompositeOperation = "lighter";
     if (this.charge) this.drawCharge(now);
     if (this.beam) {
-      const t = now - this.beam.t0;
+      const t = Math.max(0, now - this.beam.t0);   // rAF timestamps can predate t0 slightly
       if (t > this.beam.ms) this.beam = null;
       else WEAPON_STYLES[this.beam.style](this, this.beam, now, t, dt);
     }
@@ -399,7 +413,7 @@ class WeaponFX {
 
   drawCharge(now) {
     const { p, t0, ms, color: [r, g, b] } = this.charge;
-    const u = Math.min((now - t0) / ms, 1);
+    const u = Math.min(Math.max(0, (now - t0) / ms), 1);
     // Motes of energy get sucked into the muzzle.
     for (let i = 0; i < 3; i++) {
       const a = rand(0, TAU), d = rand(70, 150);
@@ -435,7 +449,7 @@ class WeaponFX {
     const { ctx } = this;
     this.rings = this.rings.filter((r) => now - r.t0 < r.ms);
     for (const r of this.rings) {
-      const u = (now - r.t0) / r.ms;
+      const u = Math.max(0, (now - r.t0) / r.ms);
       const e = 1 - Math.pow(1 - u, 3);
       ctx.strokeStyle = `rgba(255,235,180,${0.85 * (1 - u)})`;
       ctx.lineWidth = 20 * (1 - u) + 1;

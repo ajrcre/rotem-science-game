@@ -331,7 +331,7 @@ ASSETS += [
     *boss("alien4", "A teal fish-like alien villain with fins and gills, blowing bubbles, the glass dome "
           "filled with water."),
     *boss("alien5", "A boxy red robot alien villain with two smokestacks on its head puffing black smoke."),
-    *boss("alien6", "A big orange alien king with five eyes, a golden crown and a royal blue cape, the final "
+    *boss("alien6", "A big orange alien king with five eyes, wearing exactly one small golden crown and a royal blue cape, the final "
           "boss, on an extra large ornate golden saucer."),
 ]
 ASSETS_BY_NAME = {a.name: a for a in ASSETS}

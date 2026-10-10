@@ -109,7 +109,7 @@ body { font-family: var(--font-body); color: var(--ink); }
 .lever-handle:focus-visible { outline: 4px dashed var(--glow); outline-offset: 6px; }
 .lever-handle.dragging { cursor: grabbing; }
 .lever-handle.spring { transition: transform .45s cubic-bezier(.3,1.8,.5,1); }
-.lever-hint { position: absolute; top: -60px; left: 50%; transform: translateX(-50%); white-space: nowrap;
+.lever-hint { position: absolute; top: 40px; left: 150px; transform: none; white-space: nowrap;
   font: 28px var(--font-title); color: var(--paper); background: var(--red); border: 4px solid var(--ink);
   border-radius: 14px; padding: 0 16px; text-shadow: 2px 2px 0 var(--ink); animation: nudge 1s ease-in-out infinite; }
 .lever-hint::after { content: "↓"; display: block; text-align: center; font-size: 34px; line-height: .8; }
