@@ -104,8 +104,11 @@ const loadImages = (urls) => Promise.all(urls.map((src) => {
 // ---------- Screens: splash → lab → a game (State) ----------
 // `music` is the loop that plays on the screen (null = silence); see Music in sound.js.
 // `ready()` resolves when the screen's painting is in; the iris stays shut until then (slow phones).
+// Every screen but the splash has its own address (#lab, #energy, #credits), so links and the back button work.
+// It is still one page: moving to another page would silence the sound until the next tap.
 const Screens = {
   current: null,
+  pending: null,          // a screen asked for during a transition, shown right after it
   readyMs: 6000,          // never keep the iris shut longer than this, loaded or not
   states: {
     splash: {
@@ -132,9 +135,20 @@ const Screens = {
     },
   },
 
-  async go(name) {
-    if (this.busy) return;
+  // The screen the address asks for (the splash when it names none).
+  fromUrl() {
+    const name = decodeURIComponent(location.hash.slice(1));
+    return Object.hasOwn(this.states, name) ? name : "splash";
+  },
+
+  // `push: false` when the address already says where we're going (back button, typed link).
+  async go(name, { push = true } = {}) {
+    if (this.busy) { this.pending = { name, push }; return; }
     this.busy = true;
+    if (push) {
+      const url = name === "splash" ? location.pathname + location.search : `#${name}`;
+      if (this.fromUrl() !== name) history.pushState(null, "", url);
+    }
     const from = this.current;
     if (from) await Film.iris(true);
     if (from) this.states[from].leave();
@@ -146,6 +160,9 @@ const Screens = {
     state.enter(from);
     await Film.iris(false);                     // the page starts with the iris shut, too
     this.busy = false;
+    const next = this.pending;
+    this.pending = null;
+    if (next && next.name !== this.current) this.go(next.name, next);
   },
 };
 
@@ -163,7 +180,10 @@ const Splash = {
       if (e.target.closest?.("#btn-sound")) return;     // muting on the splash shouldn't leave it
       removeEventListener("click", enter);
       removeEventListener("keydown", enter);
-      if (Screens.current === "splash") Screens.go("lab");
+      if (Screens.current !== "splash") return;
+      Splash.tapped = true;
+      const target = Screens.fromUrl();                // a link to #energy lands there after the tap
+      Screens.go(target === "splash" ? "lab" : target, { push: target === "splash" });
     };
     addEventListener("click", enter);
     addEventListener("keydown", enter);
@@ -401,5 +421,11 @@ if (typeof document !== "undefined") {
   $("btn-credits").addEventListener("click", () => Screens.go("credits"));
   $("btn-credits-back").addEventListener("click", () => Screens.go("lab"));
   addEventListener("keydown", (e) => { if (e.key === "Escape" && Screens.current === "credits") Screens.go("lab"); });
-  Screens.go("splash");
+  // Back/forward and edited addresses. Before the first tap only the splash may show (the sound is still locked);
+  // its tap then follows whatever the address says.
+  addEventListener("popstate", () => {
+    const name = Screens.fromUrl();
+    if (Splash.tapped && name !== Screens.current) Screens.go(name, { push: false });
+  });
+  Screens.go("splash", { push: false });
 }

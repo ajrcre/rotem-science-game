@@ -7,7 +7,7 @@ Usage:
     python3 tools/generate_voice.py --list      # print every line, record nothing
 
 Reads the API key from the ELEVENLABS_API_KEY environment variable. The lines come
-straight from mockup/levels.js and mockup/lab.js (evaluated with node), so editing a line there and
+straight from game/levels.js and game/lab.js (evaluated with node), so editing a line there and
 re-running this script re-records exactly that line: assets/voice/manifest.json keeps
 the text each clip was recorded from.
 """
@@ -27,8 +27,8 @@ from pathlib import Path
 import requests
 
 ROOT = Path(__file__).resolve().parent.parent
-LEVELS_JS = ROOT / "mockup" / "levels.js"
-LAB_JS = ROOT / "mockup" / "lab.js"
+LEVELS_JS = ROOT / "game" / "levels.js"
+LAB_JS = ROOT / "game" / "lab.js"
 VOICE_DIR = ROOT / "assets" / "voice"
 MANIFEST = VOICE_DIR / "manifest.json"
 
@@ -97,7 +97,7 @@ def load_game_data(levels_js: Path = LEVELS_JS, lab_js: Path = LAB_JS) -> dict:
 
 
 def collect_lines(data: dict) -> list[Line]:
-    """Every line the professor says, keyed the way mockup/game.js and mockup/lab.js ask for them."""
+    """Every line the professor says, keyed the way game/game.js and game/lab.js ask for them."""
     lines = [Line("not_now", NOT_NOW)]
     lines += [Line(key, text, "excited") for key, text in data.get("LAB_LINES", {}).items()]
     lines += [Line(f"fact_{key}", card["fact"]) for key, card in data["CARDS"].items()]

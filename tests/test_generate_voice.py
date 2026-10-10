@@ -57,14 +57,14 @@ def test_every_key_the_game_asks_for_is_a_line():
         n = level["id"]
         assert {f"intro_{n}", f"lever_{n}", f"good_{n}_0", f"need_{n}_0", f"prompt_{n}_0", f"explain_{n}_0"} <= keys
     assert {f"fact_{k}" for k in data["CARDS"]} | {"not_now"} <= keys
-    game = (ROOT / "mockup" / "game.js").read_text()
+    game = (ROOT / "game" / "game.js").read_text()
     for prefix in ("intro_", "good_", "need_", "fact_", "lever_", "prompt_", "explain_", "not_now"):
         assert prefix in game
 
 
 @needs_node
 def test_not_now_matches_the_bubble_text():
-    assert gv.NOT_NOW in (ROOT / "mockup" / "game.js").read_text()
+    assert gv.NOT_NOW in (ROOT / "game" / "game.js").read_text()
 
 
 @needs_node
@@ -72,6 +72,6 @@ def test_lab_lines_are_recorded_and_used():
     data = gv.load_game_data()
     keys = {line.key for line in gv.collect_lines(data)}
     assert set(data["LAB_LINES"]) <= keys
-    lab = (ROOT / "mockup" / "lab.js").read_text()
+    lab = (ROOT / "game" / "lab.js").read_text()
     for key in data["LAB_LINES"]:
         assert f'"{key}"' in lab          # lab.js asks the Narrator for this clip by name

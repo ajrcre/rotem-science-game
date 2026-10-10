@@ -10,7 +10,7 @@ Usage:
 Each source (Strategy pattern) only knows how to get raw audio bytes for one sound;
 SoundSource.produce (Template Method) handles variants, skipping and post-processing,
 so every candidate lands trimmed, mono, 44.1 kHz and at the same loudness. Then open
-mockup/sfx_compare.html to listen side by side and pick winners.
+game/sfx_compare.html to listen side by side and pick winners.
 
 ElevenLabs needs ELEVENLABS_API_KEY (a paid plan for commercial use). Kenney packs are CC0.
 """

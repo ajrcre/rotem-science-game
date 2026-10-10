@@ -33,7 +33,7 @@ def _tone(seconds: float, rate: int = 22050, amp: float = 0.1) -> np.ndarray:
 
 
 def test_manifest_covers_exactly_the_games_sounds():
-    names = re.search(r"names:\s*\[(.*?)\]", (ROOT / "mockup" / "sound.js").read_text(), re.S).group(1)
+    names = re.search(r"names:\s*\[(.*?)\]", (ROOT / "game" / "sound.js").read_text(), re.S).group(1)
     assert set(fs.load_manifest()) == set(re.findall(r'"(\w+)"', names))
 
 

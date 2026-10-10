@@ -1,6 +1,7 @@
 {
   "trailingSlash": true,
   "redirects": [
-    { "source": "/", "destination": "/mockup/", "permanent": false }
+    { "source": "/", "destination": "/game/", "permanent": false },
+    { "source": "/mockup/:path*", "destination": "/game/:path*", "permanent": true }
   ]
 }

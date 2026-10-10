@@ -4,7 +4,7 @@
 
 ## המעבדה
 המעבדה היא איור אחד שלם (`assets/art/lab_hub.jpg`). כל פינה נגזרת מתוכו לשכבה נפרדת שמונחת בדיוק מעל האיור, כך שבמנוחה רואים תמונה אחת. כשהעכבר מצביע על פינה, רק השכבה שלה זזה וזוהרת.
-הפינות מוגדרות ב-`LAB_CORNERS` שב-`mockup/lab.js`. כדי להוסיף משחק מוסיפים לפינה מסך `open`. פינה בלי `open` מוצגת כ"בקרוב".
+הפינות מוגדרות ב-`LAB_CORNERS` שב-`game/lab.js`. כדי להוסיף משחק מוסיפים לפינה מסך `open`. פינה בלי `open` מוצגת כ"בקרוב".
 
 ```bash
 python3 tools/generate_assets.py lab_hub     # האיור המלא
@@ -16,13 +16,15 @@ python3 tools/cut_lab_layers.py --reuse      # גזירה מחדש מהמסכו�
 המשחק הראשון במעבדה (פינת האנרגיה) מלמד על אנרגיה: סוגי אנרגיה, מקורות וממירים.
 החייזרים תוקפים, וכדי לבנות נשקים צריך להרכיב שרשרת המרות אנרגיה, שלב אחרי שלב.
 
-## מוקאפ
-מגישים את התיקייה עם שרת מקומי ופותחים את `mockup/index.html`:
+## הרצה
+מגישים את התיקייה עם שרת מקומי ופותחים את `game/index.html`:
 
 ```bash
 python3 -m http.server 8000
-# http://localhost:8000/mockup/
+# http://localhost:8000/game/
 ```
+
+המשחק הוא עמוד אחד (כדי שהצלילים לא ייקטעו בין מסכים), אבל לכל מסך יש כתובת משלו: `#lab`, `#energy`, `#credits`. אפשר לשלוח קישור ישיר, וכפתור "חזרה" בדפדפן עובר בין המסכים. מסך הפתיחה תמיד מופיע ראשון, כי הדפדפן לא משמיע צלילים לפני הקשה ראשונה.
 
 ## ייצור גרפיקה
 הגרפיקה נוצרת עם Gemini (`gemini-3-pro-image`). צריך להגדיר את המשתנה `GEMINI_API_KEY` בסביבה.
@@ -47,7 +49,7 @@ python3 tools/fetch_sounds.py elevenlabs boom --refetch   # יצירה חדשה 
 python3 tools/fetch_sounds.py promote elevenlabs     # העברה למשחק (MP3 + variants.json)
 ```
 
-אפשר גם להביא חלופות בקוד פתוח מ-Kenney (רישיון CC0): `python3 tools/fetch_sounds.py kenney`. את כל הגרסאות אפשר להשוות ב-`mockup/sfx_compare.html`.
+אפשר גם להביא חלופות בקוד פתוח מ-Kenney (רישיון CC0): `python3 tools/fetch_sounds.py kenney`. את כל הגרסאות אפשר להשוות ב-`game/sfx_compare.html`.
 
 הצלילים המסונתזים הישנים (`tools/generate_sounds.py`) נשמרו ב-`assets/sfx_synth/` לצורך השוואה.
 
@@ -68,7 +70,7 @@ python3 tools/prepare_music.py
 
 ## קריינות
 פרופסור מדעני מדבר בקול "Crazy Scientist" מ-ElevenLabs (מודל `eleven_v3`, שתומך בעברית). צריך להגדיר את המשתנה `ELEVENLABS_API_KEY` בסביבה.
-הטקסטים נלקחים ישירות מ-`mockup/levels.js` ומ-`mockup/lab.js` (דרך node), והקבצים נשמרים ב-`assets/voice/`.
+הטקסטים נלקחים ישירות מ-`game/levels.js` ומ-`game/lab.js` (דרך node), והקבצים נשמרים ב-`assets/voice/`.
 
 ```bash
 python3 tools/generate_voice.py             # רק שורות חדשות או שהשתנו
