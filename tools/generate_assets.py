@@ -334,6 +334,40 @@ ASSETS += [
     *boss("alien6", "A big orange alien king with five eyes, wearing exactly one small golden crown and a royal blue cape, the final "
           "boss, on an extra large ornate golden saucer."),
 ]
+# ---------- Splash screen and the lab hub (one corner per game) ----------
+ASSETS += [
+    AssetSpec(
+        "splash",
+        "Wide title-screen painting: a quirky 1930s mad-scientist laboratory building on a hill at night, "
+        "a crooked brick tower with a big round window glowing warm yellow, a copper dome observatory, "
+        "Tesla coils on the roof shooting cartoon lightning bolts, smoke puffs from chimneys, a big "
+        "cartoon moon and twinkling stars. The whole upper third of the image is open night sky, left "
+        "clear for a title. No characters, no text.",
+        aspect="16:9", kind="background", references=["professor"],
+    ),
+    AssetSpec(
+        "lab_room",
+        "Wide background painting of a big empty 1930s mad-scientist laboratory hall seen from the front: "
+        "wooden plank floor across the bottom third, brick back wall, copper pipes along the ceiling, "
+        "hanging lamps giving warm light, a big round window with a night sky in the top center. The floor "
+        "and the walls are mostly clear and empty so furniture can be placed on them. No characters, no "
+        "furniture, no text.",
+        aspect="16:9", kind="background", references=["professor", "lab_bg"],
+    ),
+    sprite("corner_energy", "An energy corner of a laboratory: a wooden workbench holding a brass dynamo "
+           "generator with a crank, a big battery, a glowing light bulb, a small Tesla coil and a little "
+           "windmill, cables connecting them, a lightning-bolt sign above it with no letters. Seen from the "
+           "front, no characters."),
+    sprite("corner_chemistry", "A chemistry corner of a laboratory: a wooden table crowded with bubbling "
+           "round flasks, test tubes in a rack, a brass burner and twisting glass tubes with colorful "
+           "liquids, puffs of colored smoke. Seen from the front, no characters."),
+    sprite("corner_electric", "A magnets and electricity corner of a laboratory: a cabinet with a giant red "
+           "horseshoe magnet, copper coils, a compass, a switchboard with knife switches and dials. Seen "
+           "from the front, no characters."),
+    sprite("corner_space", "A space corner of a laboratory: a big brass telescope on a tripod pointing up, a "
+           "planet globe with a ring on a stand, star charts pinned to a board, a small toy rocket. Only objects: absolutely no people, no professor, no scientist. Seen "
+           "from the front, no characters."),
+]
 ASSETS_BY_NAME = {a.name: a for a in ASSETS}
 
 
@@ -347,7 +381,8 @@ class GeminiImageClient:
     def generate(self, prompt: str, aspect: str, references: list[Path], retries: int = 3) -> Image.Image:
         parts: list[dict] = [{"text": prompt}]
         for ref in references:
-            parts.append({"inline_data": {"mime_type": "image/png",
+            mime = "image/jpeg" if ref.suffix == ".jpg" else "image/png"
+            parts.append({"inline_data": {"mime_type": mime,
                                           "data": base64.b64encode(ref.read_bytes()).decode()}})
         body = {
             "contents": [{"role": "user", "parts": parts}],
@@ -370,8 +405,16 @@ class GeminiImageClient:
         raise RuntimeError("image generation failed")
 
 
+def reference_path(name: str) -> Path | None:
+    """The untouched raw render if we have it, else the shipped art (fresh clones have no raw dir)."""
+    for path in (RAW_DIR / f"{name}.png", ART_DIR / f"{name}.png", ART_DIR / f"{name}.jpg"):
+        if path.exists():
+            return path
+    return None
+
+
 def generate_asset(client: GeminiImageClient, spec: AssetSpec) -> None:
-    refs = [RAW_DIR / f"{r}.png" for r in spec.references if (RAW_DIR / f"{r}.png").exists()]
+    refs = [path for r in spec.references if (path := reference_path(r))]
     logger.info("Generating asset", name=spec.name, references=len(refs))
     raw = client.generate(spec.full_prompt(), spec.aspect, refs)
     raw.convert("RGB").save(RAW_DIR / f"{spec.name}.png")
