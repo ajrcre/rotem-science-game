@@ -23,7 +23,8 @@ const LAB_CORNERS = [
   { id: "space",     label: "פינת החלל",           fx: "stars" },
 ];
 
-// Old-movie credits, one card at a time ([role, name]; a card without a role is a title).
+// Old-movie credits, one card at a time: [role, name] (no role = a title card), or a cast list
+// { heading, list, ms } in smaller print.
 const CREDITS = [
   ["", LAB_TITLE],
   ["יוצר", "רותם ברק"],
@@ -32,6 +33,18 @@ const CREDITS = [
   ["מוסיקה", "סונו"],
   ["איורים", "ג׳ימיני"],
   ["קולות ואפקטים", "אילבן לאבס"],
+  {
+    heading: "בהשתתפות",
+    ms: 8000,
+    list: [
+      "פרופסור מדעני", "ספארקי, העוזר הנאמן",
+      "התמנון בעל שלוש העיניים (חייזר 1)", "האוזניים המעופפות (חייזר 2)",
+      "ראש המדחף (חייזר 3)", "דג החלל (חייזר 4)",
+      "רובוט הארובות (חייזר 5)", "מלך החייזרים (חייזר 6)",
+      "הידית המדברת", "עכבר מעבדה 1", "עכבר מעבדה 2", "אב הבית", "טוסטר משולשים",
+      "אל פצ׳ינו", "רוברט דנירו", "קוונטין טרנטינו", "סידני סוויני",
+    ],
+  },
   ["", "סוף"],
 ];
 
@@ -160,11 +173,23 @@ const Credits = {
     const showCard = (i) => {
       if (run !== this.run) return;
       if (i >= CREDITS.length) { Screens.go("lab"); return; }
-      const [role, name] = CREDITS[i];
-      card.className = "credits-card" + (role ? "" : " title") + (i === CREDITS.length - 1 ? " end" : "");
-      card.replaceChildren(...(role ? [el("small", "", role)] : []), el("strong", "", name));
+      const entry = CREDITS[i];
+      const last = i === CREDITS.length - 1;
+      let ms = last ? this.cardMs + 1000 : this.cardMs;
+      if (Array.isArray(entry)) {
+        const [role, name] = entry;
+        card.className = "credits-card" + (role ? "" : " title") + (last ? " end" : "");
+        card.replaceChildren(...(role ? [el("small", "", role)] : []), el("strong", "", name));
+      } else {                                       // the cast: a heading over a two-column list
+        ms = entry.ms;
+        const list = el("ul", "cast");
+        list.append(...entry.list.map((n) => el("li", "", n)));
+        card.className = "credits-card cast-card";
+        card.replaceChildren(el("strong", "", entry.heading), list);
+      }
+      card.style.animationDuration = last ? "" : `${ms}ms`;
       restart(card, "in");
-      this.timer = setTimeout(() => showCard(i + 1), i === CREDITS.length - 1 ? this.cardMs + 1000 : this.cardMs);
+      this.timer = setTimeout(() => showCard(i + 1), ms);
     };
     showCard(0);
     setTimeout(() => $("btn-credits-back").focus({ preventScroll: true }), 300);

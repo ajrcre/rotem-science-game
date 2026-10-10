@@ -792,7 +792,6 @@ class Workbench {
     $("alien").className = "actor alien";
     for (const a of [this.professor, this.sparky, this.alien]) a.reset();
     this.say(this.level.intro, "", "talk", [`intro_${level.id}`]);
-    Ambience.start({ volume: 0.22 });              // the lab hums along, quietly; no music in a level
     $("threat-fill").style.width = "20%";
     this.startTaunts();
   }
