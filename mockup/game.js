@@ -280,6 +280,7 @@ const Film = {
 class Lever {
   static UP = -28;
   static DOWN = 62;
+  static REACH = 200;                      // stage px of straight downward drag for a full pull
 
   constructor(onGrab, onRelease, onPulled) {
     this.el = $("lever");
@@ -300,12 +301,13 @@ class Lever {
     this.dragging = false;
     this.el.classList.remove("show");
     this.handle.classList.remove("spring");
-    $("lever-hint").hidden = false;
+    $("lever-guide").hidden = true;
     this.set(Lever.UP);
   }
 
   show() {
     this.active = true;
+    $("lever-guide").hidden = false;
     this.handle.setAttribute("tabindex", "0");
     this.el.classList.add("show");
   }
@@ -332,7 +334,8 @@ class Lever {
     this.dragging = true;
     this.handle.classList.add("dragging");
     this.handle.classList.remove("spring");
-    $("lever-hint").hidden = true;
+    $("lever-guide").hidden = true;
+    this.startY = e.clientY;
     Sfx.play("click");
     this.onGrab();
   }
@@ -342,7 +345,10 @@ class Lever {
     const p = this.pivot();
     // Angle from vertical: 0 = straight up, positive = leaning right (pulled down).
     const deg = (Math.atan2(e.clientX - p.x, p.y - e.clientY) * 180) / Math.PI;
-    this.set(Math.max(Lever.UP, Math.min(Lever.DOWN, deg)));
+    // A plain downward pull counts too, so kids who drag straight down still move the lever.
+    const drop = (e.clientY - this.startY) / stageScale();
+    const pulled = Lever.UP + (drop / Lever.REACH) * (Lever.DOWN - Lever.UP);
+    this.set(Math.max(Lever.UP, Math.min(Lever.DOWN, Math.max(deg, pulled))));
     if (this.angle >= Lever.DOWN - 4) this.finish();
   }
 
@@ -352,7 +358,7 @@ class Lever {
     this.handle.classList.remove("dragging");
     this.handle.classList.add("spring");
     this.set(Lever.UP);
-    $("lever-hint").hidden = false;
+    $("lever-guide").hidden = false;
     this.onRelease();
   }
 
@@ -775,6 +781,7 @@ class Workbench {
     this.step = 0;
     this.mistakes = 0;
     this.busy = false;
+    this.run = (this.run || 0) + 1;              // bumps on every start/stop, so stale awaits can tell
     this.renderChain();
     this.renderCards();
     this.updateStars();
@@ -835,9 +842,10 @@ class Workbench {
   }
 
   // Professor speaks: typewriter text and his recorded voice while his mouth flaps between poses.
+  // Resolves once the line is over: the recording has ended and the bubble had time to be read.
   say(text, mood, gesture = "talk", voice = []) {
     const mouth = (ms) => this.professor.play(["talk", "idle"], { fps: 4, ms });
-    Narrator.speak(voice, gesture === "talk" ? mouth : null);
+    const spoken = Narrator.speak(voice, gesture === "talk" ? mouth : null);
     const b = $("bubble");
     const p = $("bubble-text");
     b.className = "bubble " + (mood || "");
@@ -851,6 +859,8 @@ class Workbench {
       if (n >= text.length) clearInterval(this.typeTimer);
     }, 45);
     if (gesture === "talk") this.professor.play(["talk", "idle"], { fps: 4, ms: Math.min(text.length * 24, 2600) });
+    const readMs = (text.length / 2) * 45 + 1200;   // typewriter time + a beat to finish reading
+    return Promise.all([spoken, wait(readMs)]);
   }
 
   updateStars() {
@@ -864,17 +874,20 @@ class Workbench {
     const key = btn.dataset.key;
     if (key !== step.card) return this.wrong(btn, key, step);
     this.busy = true;
+    const run = this.run;
     Sfx.play("click");
     await this.flyToSlot(btn, this.slots[this.step]);
     Sfx.play("card_right");
-    this.say(step.good, "good", "none", [`good_${this.level.id}_${this.step}`]);
+    const said = this.say(step.good, "good", "none", [`good_${this.level.id}_${this.step}`]);
     this.professor.play(["cheer", "talk", "cheer", "idle"], { fps: 3, ms: 1700, react: "jump" });
     this.sparky.play(["dance_a", "dance_b"], { fps: 3, ms: 1500, react: "dance" });
     this.alien.play(["scared"], { ms: 1200, react: "tremble" });
     this.step += 1;
     this.slots[this.step]?.classList.add("current");
     if (this.step === this.level.steps.length) {
-      await wait(2000);
+      await said;                                  // let the professor finish before the weapon charges
+      await wait(400);
+      if (run !== this.run) return;                // left or restarted the level while he was talking
       await this.armLever();
     }
     this.busy = false;
@@ -973,6 +986,7 @@ class Workbench {
   }
 
   stop() {
+    this.run = (this.run || 0) + 1;
     Narrator.stop();
     clearInterval(this.tauntTimer);
     clearInterval(this.typeTimer);

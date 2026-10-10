@@ -43,8 +43,22 @@
 
     <!-- Lever (appears when the chain is complete) -->
     <div class="lever" id="lever">
-      <div class="lever-hint" id="lever-hint">גררו למטה!</div>
-      <div class="lever-handle" id="lever-handle" role="button" aria-label="ידית – גררו למטה"><svg viewBox="0 0 120 300">
+      <!-- How to pull: a see-through handle swings along the arc, with an arrow over its path -->
+      <div class="lever-guide" id="lever-guide" aria-hidden="true">
+        <svg class="lever-arc" viewBox="0 0 400 470">
+          <defs><marker id="arc-head" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 z" fill="#ffd84a" stroke="#1c1410" stroke-width="1.5"/></marker></defs>
+          <path class="arc-ink" d="M 34 46 A 255 255 0 0 1 264 101"/>
+          <path class="arc-dash" d="M 34 46 A 255 255 0 0 1 264 101" marker-end="url(#arc-head)"/>
+        </svg>
+        <div class="lever-ghost"><svg viewBox="0 0 120 300">
+        <rect x="48" y="58" width="24" height="236" rx="10" fill="url(#rod)" stroke="#1c1410" stroke-width="6"/>
+        <circle cx="60" cy="52" r="46" fill="url(#knob)" stroke="#1c1410" stroke-width="7"/>
+        <ellipse cx="44" cy="34" rx="13" ry="8" fill="#fff" opacity=".8" transform="rotate(-30 44 34)"/>
+      </svg></div>
+        <div class="lever-hint">משכו את הידית!</div>
+      </div>
+      <div class="lever-handle" id="lever-handle" role="button" aria-label="ידית – משכו ימינה ולמטה"><svg viewBox="0 0 120 300">
         <defs>
           <linearGradient id="rod" x1="0" x2="1">
             <stop offset="0" stop-color="#8a5a24"/><stop offset=".35" stop-color="#f1c66e"/>

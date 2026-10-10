@@ -86,6 +86,7 @@ const Sfx = {
 // ---------- Narration: Professor Volt's recorded lines (made by tools/generate_voice.py) ----------
 // One line at a time: a new line cuts off the old one. A list of keys plays back to back,
 // and a missing clip is simply skipped, so the game still works without recordings.
+// speak() returns a promise that settles when the lines are over (finished, cut off, or silent).
 const Narrator = {
   dir: "../assets/voice/",
   audio: new Audio(),
@@ -95,14 +96,21 @@ const Narrator = {
   speak(keys, onClip = null) {
     this.stop();
     this.onClip = onClip;
-    if (Sfx.muted || !Sfx.ctx) return;      // muted, or no user gesture yet (autoplay would be blocked)
+    const done = new Promise((resolve) => { this.resolve = resolve; });
+    if (Sfx.muted || !Sfx.ctx) { this.finish(); return done; }   // muted, or no user gesture yet (autoplay would be blocked)
     this.queue = [...keys];
     this.next();
+    return done;
+  },
+
+  finish() {
+    this.resolve?.();
+    this.resolve = null;
   },
 
   next() {
     const key = this.queue.shift();
-    if (!key) return;
+    if (!key) { this.finish(); return; }
     const a = new Audio(`${this.dir}${key}.mp3`);
     a.onplaying = () => { if (this.audio === a && isFinite(a.duration)) this.onClip?.(a.duration * 1000); };
     a.onended = a.onerror = () => { if (this.audio === a) this.next(); };
@@ -113,5 +121,6 @@ const Narrator = {
   stop() {
     this.queue = [];
     this.audio.pause();
+    this.finish();
   },
 };
