@@ -95,18 +95,28 @@ const Ambience = {
   },
 };
 
+// Resolves once every image is downloaded and decoded (a broken one counts as done).
+const loadImages = (urls) => Promise.all(urls.map((src) => {
+  const img = Object.assign(new Image(), { src });
+  return img.decode().catch(() => {});
+}));
+
 // ---------- Screens: splash → lab → a game (State) ----------
 // `music` is the loop that plays on the screen (null = silence); see Music in sound.js.
+// `ready()` resolves when the screen's painting is in; the iris stays shut until then (slow phones).
 const Screens = {
   current: null,
+  readyMs: 6000,          // never keep the iris shut longer than this, loaded or not
   states: {
     splash: {
       music: null,
+      ready: () => loadImages([`${ART}splash.jpg`, frameSrc("professor", "idle")]),
       enter() { Splash.show(); },
       leave() { Splash.hide(); },
     },
     lab: {
       music: "lab",
+      ready: () => Lab.ready(),
       enter(from) { Lab.show(from); },
       leave() { Lab.hide(); },
     },
@@ -130,10 +140,11 @@ const Screens = {
     if (from) this.states[from].leave();
     this.current = name;
     $("stage").dataset.screen = name;           // lets CSS stop painting the workbench under full-screen hubs
-    const music = this.states[name].music;
-    if (music) Music.play(music); else Music.stop();
-    this.states[name].enter(from);
-    if (from) await Film.iris(false);
+    const state = this.states[name];
+    if (state.music) Music.play(state.music); else Music.stop();
+    await Promise.race([state.ready?.(), wait(this.readyMs)]);
+    state.enter(from);
+    await Film.iris(false);                     // the page starts with the iris shut, too
     this.busy = false;
   },
 };
@@ -204,12 +215,16 @@ const Credits = {
 
 // ---------- Lab hub ----------
 const Lab = {
-  built: false,
   idleMs: 25000,          // this long without choosing a corner, and the professor has to go…
   run: 0,                 // bumps whenever the lab is entered or left, so a running skit can tell it's stale
 
+  // Builds the room once; resolves when its painting, corner layers and professor are loaded.
+  ready() {
+    this.building ??= this.build().catch((err) => console.error(err));   // a missing file must not lock the screens
+    return this.building;
+  },
+
   async build() {
-    this.built = true;
     this.professor = new Actor("professor", "lab-professor");
     const layout = await fetch(`${ART}lab_hub_layers.json`).then((r) => r.json());
     const wrap = $("lab-corners");
@@ -236,12 +251,14 @@ const Lab = {
       wrap.append(btn);
     }
     for (const type of ["pointerdown", "keydown"]) $("lab").addEventListener(type, () => this.armIdle());
+    await loadImages([`${ART}lab_hub.jpg`, frameSrc("professor", "idle"), ...LAB_CORNERS.map((c) => `${ART}hub_${c.id}.png`)]);
   },
 
   show(from) {
-    if (!this.built) this.build();
+    this.ready();
     $("lab").classList.add("show");
     this.cancelSkit();
+    $("lab-bubble").hidden = true;                  // no empty bubble before the greeting
     this.pottyDone = false;
     const key = from === "splash" ? "lab_welcome" : "lab_back";
     setTimeout(() => this.say(LAB_LINES[key], [key]), 500);

@@ -299,7 +299,7 @@ body { font-family: var(--font-body); color: var(--ink); }
 }
 
 /* ---------- Quiz: a ruled exam sheet on the workbench ---------- */
-.quiz { position: absolute; inset: 0; z-index: 42; display: none; }
+.quiz { position: absolute; inset: 0; z-index: 42; display: none; background: #2a1d14; }
 .quiz.show { display: block; }
 .quiz-bg { position: absolute; inset: 0; background: url("../assets/art/lab_bg.jpg") center / cover;
   filter: sepia(.35) brightness(.55) blur(3px); transform: scale(1.04); }
@@ -429,7 +429,7 @@ body { font-family: var(--font-body); color: var(--ink); }
 .sound-btn:focus-visible { outline: 4px dashed var(--glow); outline-offset: 4px; }
 
 /* ---------- Level map ---------- */
-.levels { position: absolute; inset: 0; z-index: 45; display: none; }
+.levels { position: absolute; inset: 0; z-index: 45; display: none; background: #2a1d14; }
 .levels.show { display: block; }
 .levels-bg { position: absolute; inset: 0; background: url("../assets/art/night_sky.jpg") center / cover;
   filter: sepia(.2) brightness(.8); }
@@ -460,7 +460,7 @@ body { font-family: var(--font-body); color: var(--ink); }
 .level-quiz { font: 500 18px var(--font-body); color: var(--brass-dark); }
 
 /* ---------- Splash title screen ---------- */
-.splash { position: absolute; inset: 0; z-index: 47; display: none; cursor: pointer; }
+.splash { position: absolute; inset: 0; z-index: 47; display: none; cursor: pointer; background: #2a1d14; }
 .splash.show { display: block; }
 .splash-bg { position: absolute; inset: 0; background: url("../assets/art/splash.jpg") center / cover;
   filter: sepia(.15) saturate(.95); animation: splash-zoom 6s ease-out forwards; }
@@ -484,7 +484,8 @@ body { font-family: var(--font-body); color: var(--ink); }
 #stage:is([data-screen="splash"], [data-screen="lab"]) :is(#professor, #sparky, #alien) { visibility: hidden; }
 
 /* ---------- Lab hub ---------- */
-.lab { position: absolute; inset: 0; z-index: 46; display: none; }
+/* Full-screen hubs are opaque even before their painting loads (slow phones), so the workbench never shows through. */
+.lab { position: absolute; inset: 0; z-index: 46; display: none; background: #2a1d14; }
 .lab.show { display: block; }
 .lab-bg { position: absolute; inset: 0; background: url("../assets/art/lab_hub.jpg") 0 0 / 100% 100%; }
 .lab-title { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); margin: 0; white-space: nowrap;

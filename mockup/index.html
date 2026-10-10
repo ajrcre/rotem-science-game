@@ -6,6 +6,9 @@
 <title>המעבדה של פרופסור מדעני</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Suez+One&family=Rubik:wght@500;700&display=swap" rel="stylesheet">
+<!-- The first two screens' paintings: fetched ahead of the game's many sprites (they matter most on slow phones) -->
+<link rel="preload" as="image" href="../assets/art/splash.jpg" fetchpriority="high">
+<link rel="preload" as="image" href="../assets/art/lab_hub.jpg" fetchpriority="high">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -150,7 +153,7 @@
       <h1 class="lab-title" id="lab-title"></h1>
       <div class="lab-corners" id="lab-corners"></div>
       <div class="actor lab-professor" id="lab-professor" role="img" aria-label="פרופסור מדעני"><div class="rig boil"><img alt=""><img alt=""></div></div>
-      <div class="bubble lab-bubble" id="lab-bubble"><p id="lab-bubble-text"></p></div>
+      <div class="bubble lab-bubble" id="lab-bubble" hidden><p id="lab-bubble-text"></p></div>
       <button class="hud-btn credits-btn" id="btn-credits" type="button">🎬 קרדיטים</button>
     </section>
 
@@ -173,7 +176,7 @@
     <canvas class="grain" id="grain"></canvas>
     <div class="scratches"><i></i><i></i><i></i></div>
     <div class="vignette"></div>
-    <div class="iris" id="iris"></div>
+    <div class="iris closed" id="iris"></div>
   </div>
 </div>
 
