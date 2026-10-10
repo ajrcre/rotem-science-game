@@ -863,9 +863,12 @@ class Workbench {
     return Promise.all([spoken, wait(readMs)]);
   }
 
+  // One rule for the HUD, the victory screen and the level map: a star per mistake, never below one.
+  stars() { return Math.max(3 - this.mistakes, 1); }
+
   updateStars() {
-    const lost = Math.min(this.mistakes, 2);
-    [...$("hud-stars").children].forEach((s, i) => s.classList.toggle("lost", i >= 3 - lost));
+    const stars = this.stars();
+    [...$("hud-stars").children].forEach((s, i) => s.classList.toggle("lost", i >= stars));
   }
 
   async pick(btn) {
@@ -969,7 +972,7 @@ class Workbench {
   }
 
   showVictory() {
-    const stars = this.mistakes === 0 ? 3 : this.mistakes <= 2 ? 2 : 1;
+    const stars = this.stars();
     Progress.best(this.level.id, "stars", stars);
     const next = LEVELS.find((l) => l.id === this.level.id + 1);
     $("btn-next").textContent = next ? "לשלב הבא" : "למפת השלבים";
