@@ -122,5 +122,29 @@
  "door_close": [
   "elevenlabs/door_close.wav",
   "elevenlabs/door_close_v2.wav"
+ ],
+ "amb_bubbles": [
+  "elevenlabs/amb_bubbles.wav",
+  "elevenlabs/amb_bubbles_v2.wav"
+ ],
+ "amb_zap": [
+  "elevenlabs/amb_zap.wav",
+  "elevenlabs/amb_zap_v2.wav"
+ ],
+ "amb_tesla": [
+  "elevenlabs/amb_tesla.wav",
+  "elevenlabs/amb_tesla_v2.wav"
+ ],
+ "amb_steam": [
+  "elevenlabs/amb_steam.wav",
+  "elevenlabs/amb_steam_v2.wav"
+ ],
+ "amb_gears": [
+  "elevenlabs/amb_gears.wav",
+  "elevenlabs/amb_gears_v2.wav"
+ ],
+ "amb_clink": [
+  "elevenlabs/amb_clink.wav",
+  "elevenlabs/amb_clink_v2.wav"
  ]
 }

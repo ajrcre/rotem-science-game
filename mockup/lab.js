@@ -23,19 +23,50 @@ const LAB_CORNERS = [
   { id: "space",     label: "פינת החלל",           fx: "stars" },
 ];
 
+// Old-movie credits, one card at a time ([role, name]; a card without a role is a title).
+const CREDITS = [
+  ["", LAB_TITLE],
+  ["יוצר", "רותם ברק"],
+  ["במאי", "רותם ברק"],
+  ["קוד", "קלוד קוד"],
+  ["מוסיקה", "סונו"],
+  ["איורים", "ג׳ימיני"],
+  ["קולות ואפקטים", "מעבדות 11"],
+  ["", "סוף"],
+];
+
+// Lab ambience: a random effect every few seconds, from the corner it belongs to (stereo pan).
+const LAB_AMBIENCE = [
+  { name: "amb_bubbles", pan: -0.75 },
+  { name: "amb_clink",   pan: -0.6 },
+  { name: "amb_zap",     pan: -0.2 },
+  { name: "amb_tesla",   pan: -0.1 },
+  { name: "amb_steam",   pan: 0.1 },
+  { name: "amb_gears",   pan: 0.45 },
+];
+
 // ---------- Screens: splash → lab → a game (State) ----------
+// `music` is the loop that plays on the screen (null = silence); see Music in sound.js.
 const Screens = {
   current: null,
   states: {
     splash: {
+      music: null,
       enter() { Splash.show(); },
       leave() { Splash.hide(); },
     },
     lab: {
+      music: "lab",
       enter(from) { Lab.show(from); },
       leave() { Lab.hide(); },
     },
+    credits: {
+      music: "credits",
+      enter() { Credits.show(); },
+      leave() { Credits.hide(); },
+    },
     energy: {
+      music: "lab",             // the level map; playLevel() stops it for the game itself
       enter() { LevelMap.show(); },
       leave() { game.stop(); WindowScene.hide(); LevelMap.hide(); $("victory").classList.remove("show"); $("quiz").classList.remove("show"); },
     },
@@ -49,6 +80,8 @@ const Screens = {
     if (from) this.states[from].leave();
     this.current = name;
     $("stage").dataset.screen = name;           // lets CSS stop painting the workbench under full-screen hubs
+    const music = this.states[name].music;
+    if (music) Music.play(music); else Music.stop();
     this.states[name].enter(from);
     if (from) await Film.iris(false);
     this.busy = false;
@@ -77,6 +110,34 @@ const Splash = {
   },
 
   hide() { $("splash").classList.remove("show"); },
+};
+
+// ---------- Credits: black screen, white text, cards like an old film ----------
+const Credits = {
+  cardMs: 3000,
+
+  show() {
+    $("credits").classList.add("show");
+    const run = (this.run = (this.run || 0) + 1);
+    const card = $("credits-card");
+    const showCard = (i) => {
+      if (run !== this.run) return;
+      if (i >= CREDITS.length) { Screens.go("lab"); return; }
+      const [role, name] = CREDITS[i];
+      card.className = "credits-card" + (role ? "" : " title") + (i === CREDITS.length - 1 ? " end" : "");
+      card.replaceChildren(...(role ? [el("small", "", role)] : []), el("strong", "", name));
+      restart(card, "in");
+      this.timer = setTimeout(() => showCard(i + 1), i === CREDITS.length - 1 ? this.cardMs + 1000 : this.cardMs);
+    };
+    showCard(0);
+    setTimeout(() => $("btn-credits-back").focus({ preventScroll: true }), 300);
+  },
+
+  hide() {
+    this.run = (this.run || 0) + 1;
+    clearTimeout(this.timer);
+    $("credits").classList.remove("show");
+  },
 };
 
 // ---------- Lab hub ----------
@@ -123,12 +184,26 @@ const Lab = {
     const key = from === "splash" ? "lab_welcome" : "lab_back";
     setTimeout(() => this.say(LAB_LINES[key], [key]), 500);
     this.armIdle();
+    this.ambience();
   },
 
   hide() {
     $("lab").classList.remove("show");
+    clearTimeout(this.ambienceTimer);
     this.cancelSkit();
     Narrator.stop();
+  },
+
+  // Bubbling, zaps, steam… now and then, but never over the professor or during his bathroom trip.
+  ambience() {
+    clearTimeout(this.ambienceTimer);
+    this.ambienceTimer = setTimeout(() => {
+      if (!Narrator.src && !this.inSkit) {
+        const fx = LAB_AMBIENCE[Math.floor(Math.random() * LAB_AMBIENCE.length)];
+        Sfx.play(fx.name, { volume: 0.7, pan: fx.pan });
+      }
+      this.ambience();
+    }, rand(4000, 9000));
   },
 
   // Resolves when the line is over: recording ended and the bubble had time to be read.
@@ -253,5 +328,8 @@ if (typeof document !== "undefined") {
   $("splash-title").textContent = LAB_TITLE;
   $("lab-title").textContent = LAB_TITLE;
   $("btn-lab").addEventListener("click", () => Screens.go("lab"));
+  $("btn-credits").addEventListener("click", () => Screens.go("credits"));
+  $("btn-credits-back").addEventListener("click", () => Screens.go("lab"));
+  addEventListener("keydown", (e) => { if (e.key === "Escape" && Screens.current === "credits") Screens.go("lab"); });
   Screens.go("splash");
 }

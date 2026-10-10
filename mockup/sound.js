@@ -12,7 +12,8 @@ const Sfx = {
   names: ["click", "iris", "card_right", "card_wrong", "alien_laugh", "alien_scared", "energy_flow",
           "lever_ready", "lever_pull", "ufo_arrive", "charge", "fire_laser", "fire_sonic", "fire_wind",
           "fire_water", "fire_flame", "fire_sling", "boom", "victory", "star", "quiz_right", "quiz_wrong",
-          "step", "door_open", "pee", "fart", "door_close"],
+          "step", "door_open", "pee", "fart", "door_close",
+          "amb_bubbles", "amb_zap", "amb_tesla", "amb_steam", "amb_gears", "amb_clink"],
   pitchJitter: 0.04,
   buffers: {},
   ctx: null,
@@ -56,6 +57,7 @@ const Sfx = {
   unlock() {
     if (!this.ctx) return;
     this.unlocked = true;                       // resuming inside a gesture succeeds; sounds may start now
+    Music.resume();
     this.ctx.resume().then(() => {
       if (this.ctx.state === "running") this.stopListening();
     }).catch(() => { /* still suspended: the next gesture tries again */ });
@@ -70,7 +72,8 @@ const Sfx = {
   },
 
   // Pass `rate` to pin the pitch (e.g. the rising star chimes); otherwise it varies a little.
-  play(name, { volume = 1, rate } = {}) {
+  // `pan` (-1 left … 1 right) places a sound, e.g. bubbling from the chemistry corner.
+  play(name, { volume = 1, rate, pan = 0 } = {}) {
     const bufs = this.buffers[name];
     if (!bufs?.length || this.muted || !this.unlocked) return;
     if (this.ctx.state === "suspended") this.ctx.resume();
@@ -79,7 +82,13 @@ const Sfx = {
     src.playbackRate.value = rate ?? 1 + (Math.random() * 2 - 1) * this.pitchJitter;
     const gain = this.ctx.createGain();
     gain.gain.value = volume;
-    src.connect(gain).connect(this.out);
+    let node = src.connect(gain);
+    if (pan && this.ctx.createStereoPanner) {
+      const panner = this.ctx.createStereoPanner();
+      panner.pan.value = pan;
+      node = node.connect(panner);
+    }
+    node.connect(this.out);
     src.start();
   },
 
@@ -97,6 +106,86 @@ const Sfx = {
     btn.textContent = this.muted ? "🔇" : "🔊";
     btn.setAttribute("aria-pressed", String(!this.muted));
     btn.onclick = () => this.toggle();
+  },
+};
+
+// ---------- Background music: seamless loops made by tools/prepare_music.py ----------
+// One track at a time, looped, cross-faded when it changes. It goes through Sfx.out so the mute
+// button silences it too, and dips while the professor talks. Asked for before the first gesture,
+// it starts as soon as the sound is unlocked.
+const Music = {
+  dir: "../assets/music/",
+  level: 0.55,
+  duckLevel: 0.35,           // share of the level kept while narration plays
+  fade: 1.2,
+  tracks: new Map(),
+  current: null,             // name of the wanted track (null = silence)
+  playing: null,             // { name, src, gain } actually sounding
+
+  load(name) {
+    if (!this.tracks.has(name)) {
+      this.tracks.set(name, fetch(`${this.dir}${name}.mp3`)
+        .then((r) => { if (!r.ok) throw new Error(name); return r.arrayBuffer(); })
+        .then((data) => Sfx.ctx.decodeAudioData(data))
+        .catch(() => null));
+    }
+    return this.tracks.get(name);
+  },
+
+  play(name) {
+    if (!Sfx.ctx) return;
+    this.current = name;
+    if (this.playing?.name === name) return;
+    this.load(name);
+    if (Sfx.unlocked) this.start(name);
+  },
+
+  stop() {
+    this.current = null;
+    this.release(this.playing);
+    this.playing = null;
+  },
+
+  resume() {                 // the first gesture: start whatever was asked for
+    if (this.current && this.playing?.name !== this.current) this.start(this.current);
+  },
+
+  async start(name) {
+    if (this.starting === name) return;        // already on its way (play() and resume() can both ask)
+    this.starting = name;
+    const buf = await this.load(name);
+    this.starting = null;
+    if (!buf || this.current !== name || this.playing?.name === name) return;
+    const ctx = Sfx.ctx;
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.loop = true;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(this.target(), ctx.currentTime + this.fade);
+    src.connect(gain).connect(Sfx.out);
+    src.start();
+    this.release(this.playing);
+    this.playing = { name, src, gain };
+  },
+
+  release(track) {
+    if (!track) return;
+    const t = Sfx.ctx.currentTime;
+    track.gain.gain.cancelScheduledValues(t);
+    track.gain.gain.setValueAtTime(track.gain.gain.value, t);
+    track.gain.gain.linearRampToValueAtTime(0, t + this.fade);
+    track.src.stop(t + this.fade + 0.05);
+  },
+
+  target() { return this.level * (Narrator.src ? this.duckLevel : 1); },
+
+  duck() {                   // follow the narration: dip while a clip plays, come back after
+    if (!this.playing) return;
+    const g = this.playing.gain.gain, t = Sfx.ctx.currentTime;
+    g.cancelScheduledValues(t);
+    g.setValueAtTime(g.value, t);
+    g.linearRampToValueAtTime(this.target(), t + 0.3);
   },
 };
 
@@ -149,9 +238,10 @@ const Narrator = {
       const src = Sfx.ctx.createBufferSource();
       src.buffer = buf;
       src.connect(Sfx.out);
-      src.onended = () => { if (this.src === src) { this.src = null; this.next(); } };
+      src.onended = () => { if (this.src === src) { this.src = null; Music.duck(); this.next(); } };
       this.src = src;
       src.start();
+      Music.duck();
       this.onClip?.(buf.duration * 1000);
     });
   },
@@ -164,6 +254,7 @@ const Narrator = {
       this.src = null;
       src.onended = null;
       try { src.stop(); } catch { /* already stopped */ }
+      Music.duck();
     }
     this.finish();
   },

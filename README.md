@@ -53,6 +53,19 @@ python3 tools/fetch_sounds.py promote elevenlabs     # העברה למשחק (MP
 
 כפתור 🔊 בפינת המסך משתיק ומחזיר את הצלילים.
 
+## מוזיקה
+שני קטעי רקע נוצרו ב-Suno. המקורות שמורים ב-`assets/music_src/`:
+- `suno_lab_2.mp3` מתנגן בלולאה בחדר המעבדה ובמפת השלבים, אבל לא בתוך השלב עצמו.
+- `suno_lab_1.mp3` מלווה את מסך הקרדיטים.
+
+`tools/prepare_music.py` הופך כל קטע ללולאה חלקה: 2 השניות האחרונות מתמזגות בתחילת הקטע. הסקריפט גם מאזן עוצמה ושומר את הקבצים ב-`assets/music/`:
+
+```bash
+python3 tools/prepare_music.py
+```
+
+המוזיקה יורדת בעוצמה בזמן שהפרופסור מדבר. במעבדה מתנגנים גם צלילי אווירה אקראיים מ-ElevenLabs, כמו בעבוע, ניצוצות וקיטור (`amb_*` ב-`tools/sfx_manifest.json`), מכיוון הפינה שאליה הם שייכים.
+
 ## קריינות
 פרופסור מדעני מדבר בקול "Crazy Scientist" מ-ElevenLabs (מודל `eleven_v3`, שתומך בעברית). צריך להגדיר את המשתנה `ELEVENLABS_API_KEY` בסביבה.
 הטקסטים נלקחים ישירות מ-`mockup/levels.js` ומ-`mockup/lab.js` (דרך node), והקבצים נשמרים ב-`assets/voice/`.

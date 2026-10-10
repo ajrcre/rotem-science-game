@@ -133,5 +133,35 @@
     "prompt": "old wooden door closing with a squeaky creak and then slamming shut with a bang, cartoon",
     "seconds": 1.6, "influence": 0.5, "level_db": -13,
     "kenney": null
+  },
+  "amb_bubbles": {
+    "prompt": "liquid bubbling and gurgling in a glass laboratory flask, a few seconds, cartoon lab ambience",
+    "seconds": 2.5, "influence": 0.5, "level_db": -20,
+    "kenney": null
+  },
+  "amb_zap": {
+    "prompt": "short electric spark zap and crackle, small, cartoon laboratory",
+    "seconds": 0.8, "influence": 0.5, "level_db": -20,
+    "kenney": null
+  },
+  "amb_tesla": {
+    "prompt": "tesla coil humming and buzzing with a few crackling arcs, cartoon mad scientist lab",
+    "seconds": 2.0, "influence": 0.5, "level_db": -20,
+    "kenney": null
+  },
+  "amb_steam": {
+    "prompt": "small puff of steam hissing out of a brass pipe valve, short, cartoon lab",
+    "seconds": 1.2, "influence": 0.5, "level_db": -20,
+    "kenney": null
+  },
+  "amb_gears": {
+    "prompt": "old brass gears ticking and turning with a small clunk at the end, cartoon machine",
+    "seconds": 1.6, "influence": 0.5, "level_db": -20,
+    "kenney": null
+  },
+  "amb_clink": {
+    "prompt": "glass test tubes gently clinking together, delicate, laboratory",
+    "seconds": 0.9, "influence": 0.5, "level_db": -20,
+    "kenney": null
   }
 }

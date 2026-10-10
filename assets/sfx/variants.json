@@ -106,5 +106,29 @@
  "door_close": [
   "door_close.mp3",
   "door_close_2.mp3"
+ ],
+ "amb_bubbles": [
+  "amb_bubbles.mp3",
+  "amb_bubbles_2.mp3"
+ ],
+ "amb_zap": [
+  "amb_zap.mp3",
+  "amb_zap_2.mp3"
+ ],
+ "amb_tesla": [
+  "amb_tesla.mp3",
+  "amb_tesla_2.mp3"
+ ],
+ "amb_steam": [
+  "amb_steam.mp3",
+  "amb_steam_2.mp3"
+ ],
+ "amb_gears": [
+  "amb_gears.mp3",
+  "amb_gears_2.mp3"
+ ],
+ "amb_clink": [
+  "amb_clink.mp3",
+  "amb_clink_2.mp3"
  ]
 }

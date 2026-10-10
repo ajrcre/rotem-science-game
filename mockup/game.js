@@ -1036,6 +1036,7 @@ Rig.loop();
 const game = new Workbench({});
 
 async function playLevel(level) {
+  Music.stop();                                // the game itself has no background music
   await Film.iris(true);
   LevelMap.hide();
   $("victory").classList.remove("show");
@@ -1045,6 +1046,7 @@ async function playLevel(level) {
 }
 
 async function showMap() {
+  Music.play("lab");
   await Film.iris(true);
   game.stop();
   WindowScene.hide();
