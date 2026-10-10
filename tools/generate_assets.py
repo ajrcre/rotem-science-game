@@ -4,6 +4,7 @@ Usage:
     python3 tools/generate_assets.py            # generate missing assets
     python3 tools/generate_assets.py sparky     # (re)generate specific assets
     python3 tools/generate_assets.py --force    # regenerate everything
+    python3 tools/generate_assets.py --align-poses  # build aligned animation frames
 
 Reads the API key from the GEMINI_API_KEY environment variable.
 """
@@ -320,7 +321,107 @@ def generate_asset(client: GeminiImageClient, spec: AssetSpec) -> None:
     logger.info("Saved asset", name=spec.name, path=path.relative_to(ROOT), size=out.size)
 
 
+# ---------- Pose alignment ----------
+
+@dataclass(frozen=True)
+class PoseTransform:
+    scale: float  # applied to the pose image
+    dx: float     # offset of the scaled pose's top-left from the base's top-left, in base pixels
+    dy: float
+
+
+class PoseAligner:
+    """Register pose frames onto a base pose so the body keeps its size and position.
+
+    Every pose is drawn independently by the image model, so the character's scale and
+    placement drift between frames. We search scale + translation that maximise the
+    silhouette overlap (IoU) with the base pose; the body dominates the overlap, so
+    raised arms or kicked legs don't throw the fit off.
+    """
+
+    def __init__(self, grid: int = 160, scales: np.ndarray | None = None, search: int = 12,
+                 pad: tuple[float, float, float] = (0.40, 0.35, 0.04)) -> None:
+        self.grid = grid
+        self.scales = scales if scales is not None else np.arange(0.70, 1.31, 0.02)
+        self.search = search
+        self.pad_top, self.pad_side, self.pad_bottom = pad
+
+    @staticmethod
+    def _mask(image: Image.Image, size: tuple[int, int]) -> np.ndarray:
+        alpha = image.getchannel("A").resize(size, Image.BILINEAR)
+        return (np.asarray(alpha) > 64).astype(np.float32)
+
+    def find_transform(self, base: Image.Image, pose: Image.Image) -> PoseTransform:
+        f = self.grid / max(base.size)
+        bw, bh = round(base.width * f), round(base.height * f)
+        margin = self.grid
+        canvas_w, canvas_h = bw + 2 * margin, bh + 2 * margin
+        target = np.zeros((canvas_h, canvas_w), np.float32)
+        target[margin:margin + bh, margin:margin + bw] = self._mask(base, (bw, bh))
+        base_bottom, base_cx = margin + bh, margin + bw / 2
+
+        best = (-1.0, PoseTransform(1.0, 0.0, 0.0))
+        for s in self.scales:
+            pw, ph = max(1, round(pose.width * f * s)), max(1, round(pose.height * f * s))
+            if pw >= canvas_w or ph >= canvas_h:
+                continue
+            m = self._mask(pose, (pw, ph))
+            # Start from feet on the same baseline and the same horizontal centre of mass.
+            cx = (m.sum(axis=0) * np.arange(pw)).sum() / max(m.sum(), 1.0)
+            x0 = round(base_cx - cx)
+            y0 = round(base_bottom - ph)
+            for oy in range(-self.search, self.search + 1, 2):
+                for ox in range(-self.search, self.search + 1, 2):
+                    x, y = x0 + ox, y0 + oy
+                    if x < 0 or y < 0 or x + pw > canvas_w or y + ph > canvas_h:
+                        continue
+                    window = target[y:y + ph, x:x + pw]
+                    inter = np.minimum(window, m).sum()
+                    union = target.sum() + m.sum() - inter
+                    iou = inter / union
+                    if iou > best[0]:
+                        best = (iou, PoseTransform(float(s), (x - margin) / f, (y - margin) / f))
+        return best[1]
+
+    def canvas_size(self, base: Image.Image) -> tuple[int, int]:
+        return (round(base.width * (1 + 2 * self.pad_side)),
+                round(base.height * (1 + self.pad_top + self.pad_bottom)))
+
+    def place(self, base: Image.Image, pose: Image.Image, t: PoseTransform) -> Image.Image:
+        canvas = Image.new("RGBA", self.canvas_size(base), (0, 0, 0, 0))
+        ox, oy = base.width * self.pad_side, base.height * self.pad_top
+        scaled = pose.resize((max(1, round(pose.width * t.scale)), max(1, round(pose.height * t.scale))),
+                             Image.LANCZOS)
+        canvas.alpha_composite(scaled, (round(ox + t.dx), round(oy + t.dy)))
+        return canvas
+
+    def align_character(self, base_name: str, pose_names: list[str], out_dir: Path) -> None:
+        base = Image.open(ART_DIR / f"{base_name}.png").convert("RGBA")
+        out_dir.mkdir(parents=True, exist_ok=True)
+        self.place(base, base, PoseTransform(1.0, 0.0, 0.0)).save(out_dir / "idle.png", optimize=True)
+        for name in pose_names:
+            pose = Image.open(ART_DIR / f"{base_name}_{name}.png").convert("RGBA")
+            t = self.find_transform(base, pose)
+            self.place(base, pose, t).save(out_dir / f"{name}.png", optimize=True)
+            logger.info("Aligned pose", character=base_name, pose=name, scale=round(t.scale, 2),
+                        dx=round(t.dx), dy=round(t.dy))
+
+
+def align_all_poses() -> None:
+    aligner = PoseAligner()
+    characters: dict[str, list[str]] = {}
+    for spec in ASSETS:
+        base, _, pose_name = spec.name.partition("_")
+        if spec.references == [base] and spec.name.startswith(base + "_") and spec.prompt.startswith(POSE_PREFIX):
+            characters.setdefault(base, []).append(pose_name)
+    for base, poses in characters.items():
+        aligner.align_character(base, poses, ART_DIR / "frames" / base)
+
+
 def main(argv: list[str]) -> int:
+    if "--align-poses" in argv:
+        align_all_poses()
+        return 0
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
         logger.error("Missing environment variable", variable="GEMINI_API_KEY")

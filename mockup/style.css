@@ -21,7 +21,7 @@ body { font-family: var(--font-body); color: var(--ink); }
 #stage {
   position: absolute; left: 50%; top: 50%; width: 1600px; height: 900px;
   transform-origin: center; overflow: hidden; background: #2a1d14;
-  animation: flicker 4s infinite steps(1);
+  animation: flicker 5s ease-in-out infinite;
 }
 
 .bg {
@@ -30,8 +30,13 @@ body { font-family: var(--font-body); color: var(--ink); }
   filter: sepia(.25) saturate(.9) brightness(.82);
 }
 
+/* Actors: each pose frame shares one aligned canvas, so layers stack exactly.
+   .rig gets the procedural (spring) transform; two <img> layers cross-fade between poses. */
 .actor { position: absolute; pointer-events: none; user-select: none; }
-.actor img { width: 100%; height: 100%; object-fit: contain; object-position: bottom center; display: block; }
+.actor .rig { position: absolute; inset: 0; transform-origin: 50% 96%; will-change: transform; }
+.actor img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
+  object-position: bottom center; display: block; opacity: 0; }
+.actor img.on { opacity: 1; transition: opacity 70ms linear; }
 .boil { filter: url(#boil); }
 
 /* ---------- Title card ---------- */
@@ -57,9 +62,8 @@ body { font-family: var(--font-body); color: var(--ink); }
   transition: width .6s cubic-bezier(.3,1.6,.5,1); }
 
 /* ---------- Alien ---------- */
-.alien { top: 28px; left: 30px; width: 290px; height: 270px; animation: hover 2.4s ease-in-out infinite; }
-.alien img { object-position: center; }
-.alien.laugh { animation: laugh .12s steps(2) 10; }
+.alien { top: -80px; left: -69px; width: 487px; height: 389px; }
+.alien .rig { transform-origin: 50% 62%; }
 .alien.flee { animation: flee 1s cubic-bezier(.5,-0.4,.8,.5) forwards; }
 
 /* ---------- Chain ---------- */
@@ -89,19 +93,14 @@ body { font-family: var(--font-body); color: var(--ink); }
 .arrow.flow { color: var(--glow); text-shadow: 0 0 18px var(--glow); }
 
 /* ---------- Characters & bubble ---------- */
-.professor { right: 0; bottom: 150px; width: 360px; height: 480px; transform-origin: bottom center; animation: breathe 2.2s ease-in-out infinite; }
-.professor.cheer { animation: cheer .45s ease-in-out 2; }
-.professor.shake { animation: worry .1s linear 10; }
-.sparky { left: 290px; bottom: 175px; width: 260px; height: 240px; transform-origin: bottom center; animation: bounce .9s ease-in-out infinite; }
-.sparky.dance { animation: dance .35s ease-in-out 4; }
-.sparky.sad { animation: sad .6s ease-in-out 1; }
-.sparky.strain { animation: strain .12s linear infinite; }
+.professor { right: -62px; bottom: 131px; width: 485px; height: 691px; }
+.sparky { left: 263px; bottom: 165px; width: 314px; height: 346px; }
 
 /* ---------- Lever ---------- */
 .lever { position: absolute; left: 560px; bottom: 18px; width: 200px; height: 470px; z-index: 12;
   transform: translateY(460px); transition: transform .7s cubic-bezier(.3,1.5,.5,1); }
 .lever.show { transform: translateY(0); }
-.lever-base { position: absolute; left: 0; bottom: 0; width: 200px; height: 230px; object-fit: contain; filter: url(#boil); }
+.lever-base { position: absolute; left: 0; bottom: 0; width: 200px; height: 230px; object-fit: contain; }
 .lever-handle { position: absolute; left: 45px; bottom: 168px; width: 110px; height: 275px;
   transform-origin: 50% 98%; transform: rotate(-28deg); cursor: grab; touch-action: none; }
 .lever-handle svg { width: 100%; height: 100%; display: block; overflow: visible; filter: drop-shadow(4px 6px 0 rgba(0,0,0,.35)); }
@@ -127,18 +126,19 @@ body { font-family: var(--font-body); color: var(--ink); }
 .porthole-frame { position: absolute; width: 800px; height: 800px; object-fit: contain; left: 50%; top: 50%;
   transform: translate(-50%, -50%); pointer-events: none; filter: url(#boil); }
 .window-scene.show .porthole-frame, .window-scene.show .porthole-view { animation: zoom-in .8s cubic-bezier(.3,1.4,.5,1); }
-.ufo { position: absolute; width: 230px; left: -260px; top: 150px; }
-.ufo.enter { animation: ufo-enter 1.4s cubic-bezier(.3,1.3,.5,1) forwards; }
-.ufo.wobble { left: 200px; top: 160px; animation: ufo-wobble .1s linear infinite; }
+.ufo { position: absolute; width: 230px; left: -260px; top: 110px; }
+.ufo.enter { animation: ufo-enter 1.6s cubic-bezier(.25,1.2,.4,1) forwards; }
+.ufo.wobble { left: 120px; top: 110px; animation: ufo-float 1.6s ease-in-out infinite; }
+.ufo.hot { left: 120px; top: 110px; animation: ufo-shake 70ms linear infinite, ufo-heat .5s ease-in forwards; }
 .ufo.gone { display: none; }
-.space-beam { position: absolute; left: 430px; top: 640px; width: 34px; height: 0; transform-origin: 50% 0;
-  transform: rotate(152deg); background: linear-gradient(90deg, #fff6c9, #ffe24a 30%, #ff6b3d 50%, #ffe24a 70%, #fff6c9);
-  border: 4px solid var(--ink); border-radius: 16px; box-shadow: 0 0 30px 10px rgba(255,216,74,.7); }
-.space-beam.fire { animation: space-beam .45s ease-in forwards; }
-.space-beam.done { height: 420px; opacity: 0; transition: opacity .25s; }
-.boom { position: absolute; width: 520px; left: 60px; top: 30px; transform: scale(0); opacity: 0; }
+.cannon { position: absolute; width: 230px; right: 70px; bottom: 40px; transform: scaleX(-1) rotate(-8deg);
+  transform-origin: 70% 80%; transition: transform .2s ease-out; }
+.cannon.charging { animation: cannon-charge 90ms linear infinite; }
+.cannon.recoil { animation: cannon-recoil .5s cubic-bezier(.2,1.4,.4,1); }
+.fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.boom { position: absolute; width: 520px; left: -25px; top: -32px; transform: scale(0); opacity: 0; }
 .boom.go { animation: boom 1.6s cubic-bezier(.2,1.6,.4,1) forwards; }
-.debris-piece { position: absolute; width: 230px; left: 200px; top: 160px; animation: debris 1.6s cubic-bezier(.2,.6,.4,1) forwards; }
+.debris-piece { position: absolute; width: 230px; left: 120px; top: 110px; animation: debris 1.6s cubic-bezier(.2,.6,.4,1) forwards; }
 .boom-word { position: absolute; left: 50%; top: 50%; font: 190px var(--font-title); color: var(--glow);
   -webkit-text-stroke: 8px var(--ink); paint-order: stroke fill; text-shadow: 10px 12px 0 var(--red);
   transform: translate(-50%, -50%) scale(0) rotate(-12deg); pointer-events: none; }
@@ -252,31 +252,20 @@ body { font-family: var(--font-body); color: var(--ink); }
 .iris.closed { --iris: 0px; }
 
 /* ---------- Keyframes ---------- */
-@keyframes flicker { 0%, 100% { filter: brightness(1); } 33% { filter: brightness(.96); } 66% { filter: brightness(1.03); } }
-@keyframes hover { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-18px) rotate(3deg); } }
-@keyframes laugh { 0% { transform: translateY(0) scale(1.05, .95); } 100% { transform: translateY(-8px) scale(.95, 1.05); } }
-@keyframes blast-off {
-  0% { transform: translate(0, 0) rotate(0); }
-  15% { transform: translate(20px, 10px) scale(1.15, .85) rotate(-10deg); }
-  100% { transform: translate(-500px, -700px) rotate(-900deg) scale(.3); opacity: 0; }
-}
+@keyframes flicker { 0%, 100% { filter: brightness(1); } 30% { filter: brightness(.97); } 55% { filter: brightness(1.02); } 80% { filter: brightness(.985); } }
 @keyframes flee { 0% { transform: translate(0, 0); } 30% { transform: translate(30px, 20px) scale(1.1, .9); } 100% { transform: translate(-420px, -380px) scale(.4) rotate(-40deg); opacity: 0; } }
-@keyframes worry { 0%, 100% { translate: -4px 0; } 50% { translate: 4px 0; } }
-@keyframes strain { 0%, 100% { translate: -2px 0; } 50% { translate: 2px 1px; } }
 @keyframes nudge { 0%, 100% { translate: 0 0; } 50% { translate: 0 10px; } }
 @keyframes drift { from { transform: translate(-52%, -50%) scale(1.08); } to { transform: translate(-48%, -51%) scale(1.12); } }
 @keyframes zoom-in { from { transform: translate(-50%, -50%) scale(.25); } to { transform: translate(-50%, -50%) scale(1); } }
-@keyframes ufo-enter { 0% { left: -260px; top: 120px; transform: rotate(10deg); } 100% { left: 200px; top: 160px; transform: rotate(-4deg); } }
-@keyframes ufo-wobble { 0%, 100% { transform: rotate(-6deg) translate(-4px, 0); } 50% { transform: rotate(6deg) translate(4px, -3px); } }
-@keyframes space-beam { from { height: 0; } to { height: 420px; } }
+@keyframes ufo-enter { 0% { left: -260px; top: 60px; transform: rotate(14deg); } 70% { left: 140px; top: 120px; transform: rotate(-6deg); } 100% { left: 120px; top: 110px; transform: rotate(0); } }
+@keyframes ufo-float { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-10px) rotate(3deg); } }
+@keyframes ufo-shake { 0%, 100% { translate: -3px 1px; } 50% { translate: 3px -2px; } }
+@keyframes ufo-heat { from { filter: none; } to { filter: brightness(1.5) saturate(1.6) sepia(.4) hue-rotate(-25deg) drop-shadow(0 0 18px #ff9a3c); } }
+@keyframes cannon-charge { 0%, 100% { translate: -1px 0; } 50% { translate: 1px -1px; } }
+@keyframes cannon-recoil { 0% { transform: scaleX(-1) rotate(-8deg) translate(0, 0); } 15% { transform: scaleX(-1) rotate(-4deg) translate(-26px, 22px) scale(1.06, .92); } 100% { transform: scaleX(-1) rotate(-8deg) translate(0, 0); } }
 @keyframes boom { 0% { transform: scale(0) rotate(-20deg); opacity: 1; } 25% { transform: scale(1.15) rotate(6deg); opacity: 1; } 45% { transform: scale(1) rotate(0); } 80% { opacity: 1; } 100% { transform: scale(1.35) rotate(4deg); opacity: 0; } }
 @keyframes debris { from { transform: translate(0, 0) rotate(0); opacity: 1; } to { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(.6); opacity: 0; } }
 @keyframes boom-word { 0% { transform: translate(-50%, -50%) scale(0) rotate(-12deg); } 30% { transform: translate(-50%, -50%) scale(1.15) rotate(-8deg); } 50%, 85% { transform: translate(-50%, -50%) scale(1) rotate(-6deg); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1.3) rotate(-6deg); opacity: 0; } }
-@keyframes breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.015, .985); } }
-@keyframes cheer { 0%, 100% { transform: translateY(0) scale(1); } 40% { transform: translateY(-28px) scale(.95, 1.06); } 70% { transform: translateY(0) scale(1.06, .94); } }
-@keyframes bounce { 0%, 100% { transform: translateY(0) scale(1.04, .96); } 50% { transform: translateY(-16px) scale(.97, 1.03); } }
-@keyframes dance { 0%, 100% { transform: rotate(-12deg) translateY(0); } 50% { transform: rotate(12deg) translateY(-30px); } }
-@keyframes sad { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08, .85); } }
 @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
 @keyframes pop { 0% { transform: scale(.2); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 .title-card .pop, .victory-card { transform-origin: center; }

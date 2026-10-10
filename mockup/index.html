@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>מגיני האנרגיה – מוקאפ</title>
+<title>מגיני האנרגיה</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Suez+One&family=Rubik:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
@@ -28,15 +28,15 @@
       <div class="threat-bar"><div class="threat-fill" id="threat-fill"></div></div>
     </div>
 
-    <div class="actor alien" id="alien"><img class="boil" alt="חייזר"></div>
+    <div class="actor alien" id="alien" role="img" aria-label="חייזר"><div class="rig boil"><img alt=""><img alt=""></div></div>
 
     <!-- Energy chain -->
     <div class="chain" id="chain"></div>
 
     <!-- Characters -->
-    <div class="actor professor" id="professor"><img class="boil" alt="פרופסור וולט"></div>
+    <div class="actor professor" id="professor" role="img" aria-label="פרופסור וולט"><div class="rig boil"><img alt=""><img alt=""></div></div>
     <div class="bubble" id="bubble"><p id="bubble-text"></p></div>
-    <div class="actor sparky" id="sparky"><img class="boil" alt="ספארקי"></div>
+    <div class="actor sparky" id="sparky" role="img" aria-label="ספארקי"><div class="rig boil"><img alt=""><img alt=""></div></div>
 
     <!-- Lever (appears when the chain is complete) -->
     <div class="lever" id="lever">
@@ -74,9 +74,10 @@
       <div class="porthole-view">
         <img class="sky" src="../assets/art/night_sky.jpg" alt="">
         <img class="ufo" id="ufo" src="../assets/art/alien.png" alt="">
-        <div class="space-beam" id="space-beam"></div>
-        <img class="boom" id="boom" src="../assets/art/explosion.png" alt="">
         <div id="debris"></div>
+        <img class="boom" id="boom" src="../assets/art/explosion.png" alt="">
+        <img class="cannon" id="cannon" src="../assets/art/laser.png" alt="">
+        <canvas class="fx" id="fx" width="960" height="960"></canvas>
       </div>
       <img class="porthole-frame" src="../assets/art/porthole.png" alt="">
       <div class="boom-word" id="boom-word">בּוּם!</div>
@@ -109,7 +110,7 @@
 <svg width="0" height="0" style="position:absolute">
   <filter id="boil">
     <feTurbulence id="boil-noise" type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="1"/>
-    <feDisplacementMap in="SourceGraphic" scale="3"/>
+    <feDisplacementMap in="SourceGraphic" scale="1.5"/>
   </filter>
 </svg>
 
