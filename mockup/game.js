@@ -266,6 +266,7 @@ const Film = {
     }, 1000 / 10);
   },
   async iris(close) {
+    if (close) Sfx.play("iris", { volume: 0.6 });
     $("iris").classList.toggle("closed", close);
     await wait(850);
   },
@@ -332,6 +333,7 @@ class Lever {
     this.handle.classList.add("dragging");
     this.handle.classList.remove("spring");
     $("lever-hint").hidden = true;
+    Sfx.play("click");
     this.onGrab();
   }
 
@@ -361,6 +363,7 @@ class Lever {
     this.handle.classList.remove("dragging");
     this.handle.classList.add("spring");
     this.set(Lever.DOWN + 8);
+    Sfx.play("lever_pull");
     this.onPulled();
   }
 }
@@ -398,15 +401,18 @@ const WindowScene = {
     await Film.iris(false);
 
     restart(ufo, "enter");
+    Sfx.play("ufo_arrive", { volume: 0.7 });
     await wait(1650);
     ufo.src = `${ART}${level.boss}_scared.png`;   // it spots the cannon
     ufo.className = "ufo wobble";
+    Sfx.play("alien_scared");
     await wait(350);
 
     // Charge up.
     const muzzle = this.local(cannon, 0.2, 0.17);
     cannon.classList.add("charging");
     this.fx.chargeAt(muzzle, 850, weapon.charge);
+    Sfx.play("charge", { volume: 0.7 });
     await wait(850);
 
     // Fire!
@@ -414,6 +420,7 @@ const WindowScene = {
     cannon.className = "cannon";
     restart(cannon, "recoil");
     this.fx.fire(level.fx, muzzle, target, weapon.ms);
+    Sfx.play(`fire_${level.fx}`);
     Film.quake();
     await wait(weapon.hitAt);
     ufo.className = `ufo ${weapon.ufo}`;          // the hull heats up / shudders under fire
@@ -422,6 +429,7 @@ const WindowScene = {
     // Kaboom.
     restart($("flash"), "go");
     Film.quake();
+    Sfx.play("boom");
     ufo.classList.add("gone");
     this.debris();
     restart($("boom"), "go");
@@ -667,6 +675,7 @@ class Quiz {
     const d = this.dot(this.index);
     d.classList.remove("now");
     d.classList.add(correct ? "ok" : "miss");
+    Sfx.play(correct ? "quiz_right" : "quiz_wrong");
     if (correct) {
       this.professor.play(["cheer", "idle"], { fps: 3, ms: 1100, react: "jump" });
       this.sparky.play(["dance_a", "dance_b"], { fps: 3, ms: 1200, react: "dance" });
@@ -783,6 +792,7 @@ class Workbench {
     clearInterval(this.tauntTimer);
     this.tauntTimer = setInterval(() => {
       if (!this.busy && this.step < this.level.steps.length) {
+        Sfx.play("alien_laugh", { volume: 0.5, rate: rand(0.9, 1.1) });
         this.alien.play(["laugh", "idle"], { fps: 5, ms: 1000, react: "giggle" });
       }
     }, 7000);
@@ -850,7 +860,9 @@ class Workbench {
     const key = btn.dataset.key;
     if (key !== step.card) return this.wrong(btn, key, step);
     this.busy = true;
+    Sfx.play("click");
     await this.flyToSlot(btn, this.slots[this.step]);
+    Sfx.play("card_right");
     this.say(step.good, "good", "none");
     this.professor.play(["cheer", "talk", "cheer", "idle"], { fps: 3, ms: 1700, react: "jump" });
     this.sparky.play(["dance_a", "dance_b"], { fps: 3, ms: 1500, react: "dance" });
@@ -868,6 +880,8 @@ class Workbench {
     this.mistakes += 1;
     this.updateStars();
     restart(btn, "wrong");
+    Sfx.play("card_wrong", { volume: 0.8 });
+    Sfx.play("alien_laugh", { volume: 0.6 });
     this.sparky.play(["sad"], { ms: 1400, react: "droop" });
     this.alien.play(["laugh", "idle"], { fps: 5, ms: 1300, react: "giggle" });
     $("threat-fill").style.width = `${Math.min(20 + this.mistakes * 15, 90)}%`;
@@ -897,6 +911,7 @@ class Workbench {
   async armLever() {
     // Energy flows along the chain (right → left) and charges the weapon.
     const arrows = [...document.querySelectorAll(".arrow")];
+    Sfx.play("energy_flow", { volume: 0.7 });
     for (let i = 0; i < this.slots.length; i++) {
       this.slots[i].classList.add("flow");
       await wait(220);
@@ -909,6 +924,7 @@ class Workbench {
     document.querySelector(".tray").classList.add("empty");
     await wait(350);
     this.lever.show();
+    Sfx.play("lever_ready");
     this.say(this.level.leverLine, "good", "none");
     this.professor.hold("point");
     this.professor.rig.jump(300);
@@ -946,6 +962,8 @@ class Workbench {
       .map(([t, conv]) => `<span class="chip${conv ? " conv" : ""}">${t}</span>`)
       .join("<span>←</span>");
     $("victory").classList.add("show");
+    Sfx.play("victory");
+    for (let i = 0; i < stars; i++) setTimeout(() => Sfx.play("star", { rate: 1 + i * 0.12 }), 300 + i * 250);
     this.onVictory?.(this.level);
   }
 
@@ -988,6 +1006,7 @@ const LevelMap = {
 addEventListener("resize", fitStage);
 $("stage").addEventListener("scroll", (e) => { e.target.scrollTop = 0; e.target.scrollLeft = 0; });
 fitStage();
+Sfx.init();
 Film.start();
 Rig.loop();
 

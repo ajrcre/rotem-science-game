@@ -410,6 +410,11 @@ body { font-family: var(--font-body); color: var(--ink); }
 .hud-btn:hover { transform: translateY(-2px); }
 .hud-btn:focus-visible, .level-card:focus-visible { outline: 4px dashed var(--glow); outline-offset: 4px; }
 .buttons { flex-wrap: wrap; }
+.sound-btn { position: absolute; top: 14px; left: 14px; z-index: 48; width: 58px; height: 58px; cursor: pointer;
+  font-size: 28px; line-height: 1; padding: 0; background: var(--paper); border: 4px solid var(--ink); border-radius: 50%;
+  box-shadow: 0 5px 0 var(--ink); }
+.sound-btn:hover { transform: translateY(-2px); }
+.sound-btn:focus-visible { outline: 4px dashed var(--glow); outline-offset: 4px; }
 
 /* ---------- Level map ---------- */
 .levels { position: absolute; inset: 0; z-index: 45; display: none; }
