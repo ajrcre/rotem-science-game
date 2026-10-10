@@ -86,5 +86,25 @@
  "quiz_wrong": [
   "quiz_wrong.mp3",
   "quiz_wrong_2.mp3"
+ ],
+ "footsteps": [
+  "footsteps.mp3",
+  "footsteps_2.mp3"
+ ],
+ "door_open": [
+  "door_open.mp3",
+  "door_open_2.mp3"
+ ],
+ "pee": [
+  "pee.mp3",
+  "pee_2.mp3"
+ ],
+ "fart": [
+  "fart.mp3",
+  "fart_2.mp3"
+ ],
+ "door_close": [
+  "door_close.mp3",
+  "door_close_2.mp3"
  ]
 }

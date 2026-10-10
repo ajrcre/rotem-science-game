@@ -9,6 +9,8 @@ const LAB_LINES = {
   lab_welcome: "ברוכים הבאים למעבדה שלי! בחרו פינה – ונתחיל לגלות!",
   lab_back: "לאן ממשיכים עכשיו? בחרו פינה במעבדה!",
   lab_locked: "הפינה הזאת עוד בבנייה – בקרוב נפתח אותה!",
+  lab_potty: "אוי אוי אוי… חכו רגע, אני חייב לשירותים! מיד חוזר!",
+  lab_thanks: "תודה שחיכיתם לי. אפשר להתחיל!",
 };
 
 // Registry of lab corners. A new game = a new entry with an `open` screen; without one it shows as "בקרוב".
@@ -79,6 +81,8 @@ const Splash = {
 // ---------- Lab hub ----------
 const Lab = {
   built: false,
+  idleMs: 25000,          // this long without choosing a corner, and the professor has to go…
+  run: 0,                 // bumps whenever the lab is entered or left, so a running skit can tell it's stale
 
   async build() {
     this.built = true;
@@ -102,33 +106,126 @@ const Lab = {
       const sign = el("span", "corner-sign");
       sign.append(el("strong", "", c.label), el("small", "", c.open ? c.game : "בקרוב"));
       btn.append(Object.assign(el("img"), { src: `${ART}hub_${c.id}.png`, alt: "" }), fx, sign);
-      btn.addEventListener("pointerenter", () => this.hover(btn));
+      btn.addEventListener("pointerenter", () => { this.hover(btn); this.armIdle(); });
       btn.addEventListener("focus", () => this.hover(btn));
       btn.addEventListener("click", () => this.choose(c, btn));
       wrap.append(btn);
     }
+    for (const type of ["pointerdown", "keydown"]) $("lab").addEventListener(type, () => this.armIdle());
   },
 
   show(from) {
     if (!this.built) this.build();
     $("lab").classList.add("show");
-    this.professor.reset();
+    this.cancelSkit();
+    this.pottyDone = false;
     const key = from === "splash" ? "lab_welcome" : "lab_back";
     setTimeout(() => this.say(LAB_LINES[key], [key]), 500);
+    this.armIdle();
   },
 
   hide() {
     $("lab").classList.remove("show");
+    this.cancelSkit();
     Narrator.stop();
   },
 
+  // Resolves when the line is over: recording ended and the bubble had time to be read.
   say(text, voice, mood = "") {
     const bubble = $("lab-bubble");
     bubble.className = "bubble lab-bubble " + mood;
+    bubble.hidden = false;
     restart(bubble, "show");
     $("lab-bubble-text").textContent = text;
-    Narrator.speak(voice, (ms) => this.professor.play(["talk", "idle"], { fps: 4, ms }));
+    const spoken = Narrator.speak(voice, (ms) => this.professor.play(["talk", "idle"], { fps: 4, ms }));
     this.professor.play(["talk", "idle"], { fps: 4, ms: Math.min(text.length * 24, 2600) });
+    return Promise.all([spoken, wait(text.length * 30 + 800)]);
+  },
+
+  // ---------- The bathroom skit: plays once per visit after a long wait ----------
+  armIdle() {
+    clearTimeout(this.idleTimer);
+    if (this.pottyDone || this.inSkit) return;
+    this.idleTimer = setTimeout(() => this.potty(), this.idleMs);
+  },
+
+  cancelSkit() {
+    this.run += 1;
+    this.inSkit = false;
+    clearTimeout(this.idleTimer);
+    clearInterval(this.stepTimer);
+    const el = $("lab-professor");
+    el.style.transition = "none";
+    el.style.transform = "";
+    $("lab-bubble").hidden = false;
+    this.professor?.reset();
+  },
+
+  async potty() {
+    const run = (this.run += 1);
+    const live = () => run === this.run;
+    this.inSkit = true;
+    this.pottyDone = true;
+    const prof = this.professor;
+
+    prof.play(["hurry"], { ms: Infinity });
+    prof.rig.tremble(Infinity, 2.5);
+    await this.sayHold(LAB_LINES.lab_potty, ["lab_potty"]);
+    if (!live()) return;
+    prof.rig.tremble(0);
+
+    $("lab-bubble").hidden = true;
+    await this.walk(1100, false);                   // off the right edge, to the bathroom
+    if (!live()) return;
+
+    for (const [name, pause] of [["door_open", 1900], ["pee", 3300], ["fart", 1100], ["door_close", 1700]]) {
+      Sfx.play(name);
+      await wait(pause);
+      if (!live()) return;
+    }
+
+    await this.walk(0, true);                       // back in from the right, facing left
+    if (!live()) return;
+    prof.play(["cheer", "idle"], { fps: 3, ms: 1000, react: "jump" });
+    await wait(500);
+    if (!live()) return;
+    await this.say(LAB_LINES.lab_thanks, ["lab_thanks"]);
+    if (live()) this.inSkit = false;
+  },
+
+  // Like say(), but the professor keeps his current pose instead of flapping between talk and idle.
+  sayHold(text, voice) {
+    const bubble = $("lab-bubble");
+    bubble.className = "bubble lab-bubble";
+    bubble.hidden = false;
+    restart(bubble, "show");
+    $("lab-bubble-text").textContent = text;
+    return Promise.all([Narrator.speak(voice), wait(text.length * 30 + 800)]);
+  },
+
+  // Walk to an x offset (stage px from his spot). Facing right by default; `back` mirrors him to face left.
+  async walk(toX, back, ms = 2400) {
+    const el = $("lab-professor");
+    const flip = back ? " scaleX(-1)" : "";
+    if (back) {                                     // start from where he left, already turned around
+      el.style.transition = "none";
+      el.style.transform = `translateX(1100px)${flip}`;
+      void el.offsetWidth;
+    }
+    this.professor.play(["walk_a", "walk_b"], { fps: 5, ms: Infinity });
+    clearInterval(this.stepTimer);
+    this.stepTimer = setInterval(() => this.professor.rig.y.kick(-160), 200);   // a bounce on every step
+    Sfx.play("footsteps");
+    const again = setTimeout(() => Sfx.play("footsteps"), 1500);
+    el.style.transition = `transform ${ms}ms linear`;
+    el.style.transform = `translateX(${toX}px)${flip}`;
+    await wait(ms);
+    clearTimeout(again);
+    clearInterval(this.stepTimer);
+    el.style.transition = "none";
+    if (!back) return;
+    el.style.transform = "";
+    this.professor.hold("idle");
   },
 
   hover(btn) {
@@ -138,12 +235,14 @@ const Lab = {
 
   choose(corner, btn) {
     if (corner.open) {
+      this.cancelSkit();
       Sfx.play("card_right", { volume: 0.7 });
       Screens.go(corner.open);
       return;
     }
     restart(btn, "nope");
     Sfx.play("card_wrong", { volume: 0.6 });
+    if (this.inSkit) return;                        // he's busy (maybe not even in the room)
     this.professor.play(["worried"], { ms: 1300, react: "tremble" });
     this.say(LAB_LINES.lab_locked, ["lab_locked"], "bad");
   },

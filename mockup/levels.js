@@ -32,7 +32,7 @@ const CARDS = {
 };
 
 const CHARACTERS = {
-  professor: { poses: ["idle", "talk", "cheer", "worried", "point"], idle: "breathe" },
+  professor: { poses: ["idle", "talk", "cheer", "worried", "point", "hurry", "walk_a", "walk_b"], idle: "breathe" },
   sparky:    { poses: ["idle", "dance_a", "dance_b", "sad", "pull", "cheer"], idle: "bob" },
   alien:     { poses: ["idle", "laugh", "scared"], idle: "hover" },
   alien2:    { poses: ["idle", "laugh", "scared"], idle: "hover" },

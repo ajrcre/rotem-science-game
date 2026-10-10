@@ -102,5 +102,25 @@
   "elevenlabs/quiz_wrong.wav",
   "elevenlabs/quiz_wrong_v2.wav",
   "kenney/quiz_wrong.wav"
+ ],
+ "footsteps": [
+  "elevenlabs/footsteps.wav",
+  "elevenlabs/footsteps_v2.wav"
+ ],
+ "door_open": [
+  "elevenlabs/door_open.wav",
+  "elevenlabs/door_open_v2.wav"
+ ],
+ "pee": [
+  "elevenlabs/pee.wav",
+  "elevenlabs/pee_v2.wav"
+ ],
+ "fart": [
+  "elevenlabs/fart.wav",
+  "elevenlabs/fart_v2.wav"
+ ],
+ "door_close": [
+  "elevenlabs/door_close.wav",
+  "elevenlabs/door_close_v2.wav"
  ]
 }
