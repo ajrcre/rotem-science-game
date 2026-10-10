@@ -163,5 +163,30 @@
     "prompt": "glass test tubes gently clinking together, delicate, laboratory",
     "seconds": 0.9, "influence": 0.5, "level_db": -20,
     "kenney": null
+  },
+  "amb_beeps": {
+    "prompt": "old laboratory machine beeping and blipping, a few quick electronic beeps and a dial click, retro cartoon",
+    "seconds": 1.2, "influence": 0.5, "level_db": -20,
+    "kenney": null
+  },
+  "amb_boil": {
+    "prompt": "liquid boiling and bubbling hard in a small pot, cartoon laboratory",
+    "seconds": 2.0, "influence": 0.5, "level_db": -20,
+    "kenney": null
+  },
+  "amb_whirr": {
+    "prompt": "small electric motor whirring up and spinning down, cartoon lab machine",
+    "seconds": 1.5, "influence": 0.5, "level_db": -20,
+    "kenney": null
+  },
+  "amb_pop": {
+    "prompt": "a cork popping out of a glass bottle with a little fizz, cartoon",
+    "seconds": 0.7, "influence": 0.5, "level_db": -20,
+    "kenney": null
+  },
+  "amb_drip": {
+    "prompt": "water drops dripping one by one into a glass test tube, plink plink",
+    "seconds": 1.2, "influence": 0.5, "level_db": -20,
+    "kenney": null
   }
 }

@@ -130,5 +130,25 @@
  "amb_clink": [
   "amb_clink.mp3",
   "amb_clink_2.mp3"
+ ],
+ "amb_beeps": [
+  "amb_beeps.mp3",
+  "amb_beeps_2.mp3"
+ ],
+ "amb_boil": [
+  "amb_boil.mp3",
+  "amb_boil_2.mp3"
+ ],
+ "amb_whirr": [
+  "amb_whirr.mp3",
+  "amb_whirr_2.mp3"
+ ],
+ "amb_pop": [
+  "amb_pop.mp3",
+  "amb_pop_2.mp3"
+ ],
+ "amb_drip": [
+  "amb_drip.mp3",
+  "amb_drip_2.mp3"
  ]
 }

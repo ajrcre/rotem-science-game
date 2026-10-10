@@ -28,22 +28,59 @@ const CREDITS = [
   ["", LAB_TITLE],
   ["יוצר", "רותם ברק"],
   ["במאי", "רותם ברק"],
-  ["קוד", "קלוד קוד"],
+  ["מפיק ראשי", "קלוד קוד"],
   ["מוסיקה", "סונו"],
   ["איורים", "ג׳ימיני"],
-  ["קולות ואפקטים", "מעבדות 11"],
+  ["קולות ואפקטים", "אילבן לאבס"],
   ["", "סוף"],
 ];
 
-// Lab ambience: a random effect every few seconds, from the corner it belongs to (stereo pan).
+// Lab ambience: a busy room. Every second or so one to three of these play together,
+// each from the corner it belongs to (stereo pan: chemistry left … space right).
 const LAB_AMBIENCE = [
   { name: "amb_bubbles", pan: -0.75 },
-  { name: "amb_clink",   pan: -0.6 },
-  { name: "amb_zap",     pan: -0.2 },
-  { name: "amb_tesla",   pan: -0.1 },
+  { name: "amb_boil",    pan: -0.7 },
+  { name: "amb_drip",    pan: -0.8 },
+  { name: "amb_pop",     pan: -0.6 },
+  { name: "amb_clink",   pan: -0.55 },
+  { name: "amb_zap",     pan: -0.25 },
+  { name: "amb_tesla",   pan: -0.15 },
+  { name: "amb_whirr",   pan: -0.3 },
   { name: "amb_steam",   pan: 0.1 },
+  { name: "amb_beeps",   pan: 0.35 },
   { name: "amb_gears",   pan: 0.45 },
 ];
+
+// ---------- Ambience: the busy-lab background noise (lab room and Energy Defenders levels) ----------
+// Every second or so one to three effects play together. Softer and sparser while the professor
+// talks; `hush()` silences it (the lab's bathroom gag). `volume` scales it per place.
+const Ambience = {
+  start({ volume = 0.5 } = {}) {
+    this.volume = volume;
+    this.hushed = false;
+    clearTimeout(this.timer);
+    this.tick();
+  },
+
+  stop() { clearTimeout(this.timer); this.timer = null; },
+
+  hush(on) { this.hushed = on; },
+
+  tick() {
+    this.timer = setTimeout(() => {
+      if (!this.hushed) {
+        const talking = Boolean(Narrator.src);
+        const count = talking ? 1 : 1 + Math.floor(Math.random() * 3);
+        for (const fx of shuffle(LAB_AMBIENCE).slice(0, count)) {
+          setTimeout(() => {
+            if (this.timer) Sfx.play(fx.name, { volume: this.volume * (talking ? 0.4 : 1), pan: fx.pan, rate: rand(0.9, 1.1) });
+          }, rand(0, 400));
+        }
+      }
+      this.tick();
+    }, rand(700, 2000));
+  },
+};
 
 // ---------- Screens: splash → lab → a game (State) ----------
 // `music` is the loop that plays on the screen (null = silence); see Music in sound.js.
@@ -184,26 +221,14 @@ const Lab = {
     const key = from === "splash" ? "lab_welcome" : "lab_back";
     setTimeout(() => this.say(LAB_LINES[key], [key]), 500);
     this.armIdle();
-    this.ambience();
+    Ambience.start({ volume: 0.5 });
   },
 
   hide() {
     $("lab").classList.remove("show");
-    clearTimeout(this.ambienceTimer);
+    Ambience.stop();
     this.cancelSkit();
     Narrator.stop();
-  },
-
-  // Bubbling, zaps, steam… now and then, but never over the professor or during his bathroom trip.
-  ambience() {
-    clearTimeout(this.ambienceTimer);
-    this.ambienceTimer = setTimeout(() => {
-      if (!Narrator.src && !this.inSkit) {
-        const fx = LAB_AMBIENCE[Math.floor(Math.random() * LAB_AMBIENCE.length)];
-        Sfx.play(fx.name, { volume: 0.7, pan: fx.pan });
-      }
-      this.ambience();
-    }, rand(4000, 9000));
   },
 
   // Resolves when the line is over: recording ended and the bubble had time to be read.
@@ -228,6 +253,7 @@ const Lab = {
   cancelSkit() {
     this.run += 1;
     this.inSkit = false;
+    Ambience.hush(false);
     clearTimeout(this.idleTimer);
     clearInterval(this.stepTimer);
     const el = $("lab-professor");
@@ -251,6 +277,7 @@ const Lab = {
     prof.rig.tremble(0);
 
     $("lab-bubble").hidden = true;
+    Ambience.hush(true);                            // the lab hushes so the bathroom can be heard
     await this.walk(1100, false);                   // off the right edge, to the bathroom
     if (!live()) return;
 
@@ -262,6 +289,7 @@ const Lab = {
 
     await this.walk(0, true);                       // back in from the right, facing left
     if (!live()) return;
+    Ambience.hush(false);
     prof.play(["cheer", "idle"], { fps: 3, ms: 1000, react: "jump" });
     await wait(500);
     if (!live()) return;

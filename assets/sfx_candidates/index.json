@@ -146,5 +146,25 @@
  "amb_clink": [
   "elevenlabs/amb_clink.wav",
   "elevenlabs/amb_clink_v2.wav"
+ ],
+ "amb_beeps": [
+  "elevenlabs/amb_beeps.wav",
+  "elevenlabs/amb_beeps_v2.wav"
+ ],
+ "amb_boil": [
+  "elevenlabs/amb_boil.wav",
+  "elevenlabs/amb_boil_v2.wav"
+ ],
+ "amb_whirr": [
+  "elevenlabs/amb_whirr.wav",
+  "elevenlabs/amb_whirr_v2.wav"
+ ],
+ "amb_pop": [
+  "elevenlabs/amb_pop.wav",
+  "elevenlabs/amb_pop_v2.wav"
+ ],
+ "amb_drip": [
+  "elevenlabs/amb_drip.wav",
+  "elevenlabs/amb_drip_v2.wav"
  ]
 }

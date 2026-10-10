@@ -792,6 +792,7 @@ class Workbench {
     $("alien").className = "actor alien";
     for (const a of [this.professor, this.sparky, this.alien]) a.reset();
     this.say(this.level.intro, "", "talk", [`intro_${level.id}`]);
+    Ambience.start({ volume: 0.22 });              // the lab hums along, quietly; no music in a level
     $("threat-fill").style.width = "20%";
     this.startTaunts();
   }
@@ -955,6 +956,7 @@ class Workbench {
 
   async leverPulled() {
     clearInterval(this.tauntTimer);
+    Ambience.stop();                               // the window cutscene has its own sounds
     this.sparky.rig.strain(false);
     restart(this.goalSlot, "recoil");
     restart($("flash"), "go");
@@ -989,6 +991,7 @@ class Workbench {
   }
 
   stop() {
+    Ambience.stop();
     this.run = (this.run || 0) + 1;
     Narrator.stop();
     clearInterval(this.tauntTimer);
@@ -1018,6 +1021,9 @@ const LevelMap = {
         <span class="level-stars">${stars}</span>
         <span class="level-quiz">${p.quiz != null ? `בוחן: ${p.quiz}/${level.quiz.length}` : "בוחן: עוד לא"}</span>`;
       btn.addEventListener("click", () => playLevel(level));
+      const hover = () => Sfx.play("click", { volume: 0.35, rate: 1.3 });   // same as the lab corners
+      btn.addEventListener("pointerenter", hover);
+      btn.addEventListener("focus", hover);
       grid.append(btn);
     }
   },
