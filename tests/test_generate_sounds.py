@@ -1,3 +1,4 @@
+import json
 import re
 import sys
 import wave
@@ -41,7 +42,12 @@ def test_generate_writes_wavs_and_skips_existing(tmp_path):
 
 
 def test_player_and_assets_match_recipes():
+    # The game plays the ElevenLabs set (tools/sfx_manifest.json → assets/sfx/variants.json);
+    # the synthesized recipes are kept for comparison and cover the original sounds only.
     js = (ROOT / "mockup" / "sound.js").read_text()
     names = re.findall(r'"(\w+)"', js[js.index("names:"):js.index("buffers:")])
-    assert sorted(names) == sorted(gs.SOUNDS)
+    manifest = json.loads((ROOT / "tools" / "sfx_manifest.json").read_text())
+    variants = json.loads((ROOT / "assets" / "sfx" / "variants.json").read_text())
+    assert sorted(names) == sorted(manifest) == sorted(variants)
+    assert set(gs.SOUNDS) <= set(names)
     assert sorted(p.stem for p in gs.SFX_DIR.glob("*.wav")) == sorted(gs.SOUNDS)
