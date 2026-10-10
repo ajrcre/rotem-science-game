@@ -35,6 +35,13 @@ python3 tools/generate_assets.py sparky     # נכס מסוים
 python3 tools/generate_assets.py --force    # הכול מחדש
 ```
 
+הקבצים ב-`assets/art/` הם המקור (גדולים, ולא עולים לאתר). המשחק טוען עותקי WebP קטנים מ-`assets/web/`, ולכן אחרי כל שינוי בגרפיקה מריצים את הסקריפט הבא ומעלים גם את `assets/web/`:
+
+```bash
+python3 tools/optimize_images.py            # רק תמונות חדשות או ששונו
+python3 tools/optimize_images.py --force    # הכול מחדש
+```
+
 הספרייטים נוצרים על רקע מג'נטה, והסקריפט מסיר את הרקע אוטומטית. הקבצים נשמרים ב-`assets/art/`.
 
 ## ייצור צלילים

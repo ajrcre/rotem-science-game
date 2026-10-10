@@ -113,7 +113,7 @@ const Screens = {
   states: {
     splash: {
       music: null,
-      ready: () => loadImages([`${ART}splash.jpg`, frameSrc("professor", "idle")]),
+      ready: () => loadImages([`${ART}splash.webp`, frameSrc("professor", "idle")]),
       enter() { Splash.show(); },
       leave() { Splash.hide(); },
     },
@@ -264,14 +264,14 @@ const Lab = {
       }
       const sign = el("span", "corner-sign");
       sign.append(el("strong", "", c.label), el("small", "", c.open ? c.game : "בקרוב"));
-      btn.append(Object.assign(el("img"), { src: `${ART}hub_${c.id}.png`, alt: "" }), fx, sign);
+      btn.append(Object.assign(el("img"), { src: `${ART}hub_${c.id}.webp`, alt: "" }), fx, sign);
       btn.addEventListener("pointerenter", () => { this.hover(btn); this.armIdle(); });
       btn.addEventListener("focus", () => this.hover(btn));
       btn.addEventListener("click", () => this.choose(c, btn));
       wrap.append(btn);
     }
     for (const type of ["pointerdown", "keydown"]) $("lab").addEventListener(type, () => this.armIdle());
-    await loadImages([`${ART}lab_hub.jpg`, frameSrc("professor", "idle"), ...LAB_CORNERS.map((c) => `${ART}hub_${c.id}.png`)]);
+    await loadImages([`${ART}lab_hub.webp`, frameSrc("professor", "idle"), ...LAB_CORNERS.map((c) => `${ART}hub_${c.id}.webp`)]);
   },
 
   show(from) {
@@ -427,5 +427,5 @@ if (typeof document !== "undefined") {
     const name = Screens.fromUrl();
     if (Splash.tapped && name !== Screens.current) Screens.go(name, { push: false });
   });
-  Screens.go("splash", { push: false });
+  Screens.go("splash", { push: false }).then(() => Sfx.preload());
 }

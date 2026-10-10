@@ -1,13 +1,13 @@
 "use strict";
 
 // ---------- Data ----------
-const ART = "../assets/art/";
+const ART = "../assets/web/";
 
 // ---------- Helpers ----------
 const $ = (id) => document.getElementById(id);
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const restart = (el, cls) => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
-const frameSrc = (actor, pose) => `${ART}frames/${actor}/${pose}.png`;
+const frameSrc = (actor, pose) => `${ART}frames/${actor}/${pose}.webp`;
 const rand = (a, b) => a + Math.random() * (b - a);
 const TAU = Math.PI * 2;
 
@@ -394,9 +394,9 @@ const WindowScene = {
     const scene = $("window-scene");
     const ufo = $("ufo");
     const cannon = $("cannon");
-    ufo.src = `${ART}${level.boss}.png`;
+    ufo.src = `${ART}${level.boss}.webp`;
     ufo.className = "ufo";
-    cannon.src = `${ART}${level.goal}.png`;
+    cannon.src = `${ART}${level.goal}.webp`;
     cannon.className = "cannon";
     $("boom").className = "boom";
     $("boom-word").className = "boom-word";
@@ -409,7 +409,7 @@ const WindowScene = {
     restart(ufo, "enter");
     Sfx.play("ufo_arrive", { volume: 0.7 });
     await wait(1650);
-    ufo.src = `${ART}${level.boss}_scared.png`;   // it spots the cannon
+    ufo.src = `${ART}${level.boss}_scared.webp`;   // it spots the cannon
     ufo.className = "ufo wobble";
     Sfx.play("alien_scared");
     await wait(350);
@@ -461,7 +461,7 @@ const WindowScene = {
     const wrap = $("debris");
     pieces.forEach((clip, i) => {
       const img = document.createElement("img");
-      img.src = `${ART}${this.level.boss}_scared.png`;
+      img.src = `${ART}${this.level.boss}_scared.webp`;
       img.className = "debris-piece";
       img.style.clipPath = clip;
       const ang = (i / pieces.length) * TAU + 0.4;
@@ -531,7 +531,7 @@ class OrderQuestion {
       chip.type = "button";
       chip.dataset.key = key;
       chip.setAttribute("aria-label", label);
-      chip.append(Object.assign(el("img"), { src: `${ART}${key}.png`, alt: "" }), el("span", "", label));
+      chip.append(Object.assign(el("img"), { src: `${ART}${key}.webp`, alt: "" }), el("span", "", label));
       chip.addEventListener("click", () => this.toggle(chip));
       this.pool.append(chip);
     }
@@ -823,7 +823,7 @@ class Workbench {
     });
     const goal = document.createElement("div");
     goal.className = "slot goal filled";
-    goal.innerHTML = `<img src="${ART}${this.level.goal}.png" alt=""><span class="tag">הנשק</span>`;
+    goal.innerHTML = `<img src="${ART}${this.level.goal}.webp" alt=""><span class="tag">הנשק</span>`;
     chain.append(goal);
     this.goalSlot = goal;
   }
@@ -835,7 +835,7 @@ class Workbench {
       const btn = document.createElement("button");
       btn.className = "card";
       btn.dataset.key = key;
-      btn.innerHTML = `<img src="${ART}${key}.png" alt=""><span>${CARDS[key].label}</span>`;
+      btn.innerHTML = `<img src="${ART}${key}.webp" alt=""><span>${CARDS[key].label}</span>`;
       btn.addEventListener("click", () => this.pick(btn));
       wrap.append(btn);
     }
@@ -914,7 +914,7 @@ class Workbench {
     const from = stageRect(btn.querySelector("img"));
     const to = stageRect(slot);
     const img = document.createElement("img");
-    img.src = `${ART}${btn.dataset.key}.png`;
+    img.src = `${ART}${btn.dataset.key}.webp`;
     img.className = "flyer";
     Object.assign(img.style, { left: `${from.x}px`, top: `${from.y}px`, width: `${from.w}px`, height: `${from.h}px` });
     $("stage").append(img);
@@ -1014,8 +1014,8 @@ const LevelMap = {
       const stars = [0, 1, 2].map((i) => `<span class="${i < (p.stars || 0) ? "" : "lost"}">★</span>`).join("");
       btn.innerHTML = `
         <span class="level-num">${level.id}</span>
-        <img class="level-boss" src="${ART}${level.boss}.png" alt="">
-        <img class="level-weapon" src="${ART}${level.goal}.png" alt="">
+        <img class="level-boss" src="${ART}${level.boss}.webp" alt="">
+        <img class="level-weapon" src="${ART}${level.goal}.webp" alt="">
         <strong>${level.title}</strong>
         <span class="level-stars">${stars}</span>
         <span class="level-quiz">${p.quiz != null ? `בוחן: ${p.quiz}/${level.quiz.length}` : "בוחן: עוד לא"}</span>`;

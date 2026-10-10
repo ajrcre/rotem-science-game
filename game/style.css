@@ -28,7 +28,7 @@ body { font-family: var(--font-body); color: var(--ink); }
 
 .bg {
   position: absolute; inset: 0;
-  background: url("../assets/art/lab_bg.jpg") center / cover;
+  background: url("../assets/web/lab_bg.webp") center / cover;
   filter: sepia(.25) saturate(.9) brightness(.82);
 }
 
@@ -301,7 +301,7 @@ body { font-family: var(--font-body); color: var(--ink); }
 /* ---------- Quiz: a ruled exam sheet on the workbench ---------- */
 .quiz { position: absolute; inset: 0; z-index: 42; display: none; background: #2a1d14; }
 .quiz.show { display: block; }
-.quiz-bg { position: absolute; inset: 0; background: url("../assets/art/lab_bg.jpg") center / cover;
+.quiz-bg { position: absolute; inset: 0; background: url("../assets/web/lab_bg.webp") center / cover;
   filter: sepia(.35) brightness(.55) blur(3px); transform: scale(1.04); }
 .sheet {
   position: absolute; left: 70px; top: 40px; width: 1040px; height: 820px; padding: 34px 110px 30px 60px;
@@ -431,7 +431,7 @@ body { font-family: var(--font-body); color: var(--ink); }
 /* ---------- Level map ---------- */
 .levels { position: absolute; inset: 0; z-index: 45; display: none; background: #2a1d14; }
 .levels.show { display: block; }
-.levels-bg { position: absolute; inset: 0; background: url("../assets/art/night_sky.jpg") center / cover;
+.levels-bg { position: absolute; inset: 0; background: url("../assets/web/night_sky.webp") center / cover;
   filter: sepia(.2) brightness(.8); }
 .levels-head { position: absolute; top: 34px; left: 50%; transform: translateX(-50%); text-align: center;
   background: var(--paper); border: 6px solid var(--ink); border-radius: 22px; padding: 10px 60px 14px;
@@ -462,7 +462,7 @@ body { font-family: var(--font-body); color: var(--ink); }
 /* ---------- Splash title screen ---------- */
 .splash { position: absolute; inset: 0; z-index: 47; display: none; cursor: pointer; background: #2a1d14; }
 .splash.show { display: block; }
-.splash-bg { position: absolute; inset: 0; background: url("../assets/art/splash.jpg") center / cover;
+.splash-bg { position: absolute; inset: 0; background: url("../assets/web/splash.webp") center / cover;
   filter: sepia(.15) saturate(.95); animation: splash-zoom 6s ease-out forwards; }
 .splash-title { position: absolute; top: 46px; left: 50%; margin: 0; white-space: nowrap; transform: translateX(-50%);
   font: 104px/1.1 var(--font-title); color: var(--glow); -webkit-text-stroke: 5px var(--ink); paint-order: stroke fill;
@@ -482,12 +482,14 @@ body { font-family: var(--font-body); color: var(--ink); }
 
 /* The workbench's animated, filtered actors are covered by these screens: don't paint them. */
 #stage:is([data-screen="splash"], [data-screen="lab"]) :is(#professor, #sparky, #alien) { visibility: hidden; }
+/* …and its painting isn't even downloaded until a game needs it (the page starts on the splash). */
+#stage:is([data-screen="splash"], [data-screen="lab"], [data-screen="credits"]) > .bg { display: none; }
 
 /* ---------- Lab hub ---------- */
 /* Full-screen hubs are opaque even before their painting loads (slow phones), so the workbench never shows through. */
 .lab { position: absolute; inset: 0; z-index: 46; display: none; background: #2a1d14; }
 .lab.show { display: block; }
-.lab-bg { position: absolute; inset: 0; background: url("../assets/art/lab_hub.jpg") 0 0 / 100% 100%; }
+.lab-bg { position: absolute; inset: 0; background: url("../assets/web/lab_hub.webp") 0 0 / 100% 100%; }
 .lab-title { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); margin: 0; white-space: nowrap;
   font: 54px/1.15 var(--font-title); color: var(--red); background: var(--paper); padding: 2px 42px 6px; z-index: 4;
   border: 6px solid var(--ink); border-radius: 22px; -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill;

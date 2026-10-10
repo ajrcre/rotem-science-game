@@ -7,13 +7,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Suez+One&family=Rubik:wght@500;700&display=swap" rel="stylesheet">
 <!-- The first two screens' paintings: fetched ahead of the game's many sprites (they matter most on slow phones) -->
-<link rel="preload" as="image" href="../assets/art/splash.jpg" fetchpriority="high">
-<link rel="preload" as="image" href="../assets/art/lab_hub.jpg" fetchpriority="high">
+<link rel="preload" as="image" href="../assets/web/splash.webp" fetchpriority="high">
+<link rel="preload" as="image" href="../assets/web/lab_hub.webp" fetchpriority="high">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div id="viewport">
-  <div id="stage">
+  <div id="stage" data-screen="splash">
     <div class="bg"></div>
 
     <!-- Title card -->
@@ -76,7 +76,7 @@
         <circle cx="60" cy="52" r="46" fill="url(#knob)" stroke="#1c1410" stroke-width="7"/>
         <ellipse cx="44" cy="34" rx="13" ry="8" fill="#fff" opacity=".8" transform="rotate(-30 44 34)"/>
       </svg></div>
-      <img class="lever-base" src="../assets/art/lever_base.png" alt="">
+      <img class="lever-base" src="../assets/web/lever_base.webp" alt="">
     </div>
 
     <!-- Card tray -->
@@ -92,14 +92,14 @@
     <!-- Porthole cutscene -->
     <div class="window-scene" id="window-scene">
       <div class="porthole-view">
-        <img class="sky" src="../assets/art/night_sky.jpg" alt="">
-        <img class="ufo" id="ufo" src="../assets/art/alien.png" alt="">
+        <img class="sky" src="../assets/web/night_sky.webp" alt="">
+        <img class="ufo" id="ufo" src="../assets/web/alien.webp" alt="">
         <div id="debris"></div>
-        <img class="boom" id="boom" src="../assets/art/explosion.png" alt="">
-        <img class="cannon" id="cannon" src="../assets/art/laser.png" alt="">
+        <img class="boom" id="boom" src="../assets/web/explosion.webp" alt="">
+        <img class="cannon" id="cannon" src="../assets/web/laser.webp" alt="">
         <canvas class="fx" id="fx" width="960" height="960"></canvas>
       </div>
-      <img class="porthole-frame" src="../assets/art/porthole.png" alt="">
+      <img class="porthole-frame" src="../assets/web/porthole.webp" alt="">
       <div class="boom-word" id="boom-word">בּוּם!</div>
     </div>
 

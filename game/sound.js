@@ -30,7 +30,6 @@ const Sfx = {
       this.out = this.ctx.createGain();
       this.out.gain.value = this.muted ? 0 : 0.8;
       this.out.connect(this.ctx.destination);
-      this.preload();
     }
     // Safari only counts touchend/click as a gesture for audio; Chrome is happy with pointerdown.
     const unlock = () => this.unlock();
@@ -43,7 +42,11 @@ const Sfx = {
     });
   },
 
+  // Started once the splash is up (lab.js): nothing can play before the first tap anyway,
+  // and on a slow phone the splash's painting should not wait behind ~100 sound files.
   preload() {
+    if (!this.ctx || this.preloaded) return;
+    this.preloaded = true;
     fetch(`${this.dir}variants.json`)
       .then((r) => r.json())
       .then((variants) => {
