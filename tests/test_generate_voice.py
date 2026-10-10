@@ -65,3 +65,13 @@ def test_every_key_the_game_asks_for_is_a_line():
 @needs_node
 def test_not_now_matches_the_bubble_text():
     assert gv.NOT_NOW in (ROOT / "mockup" / "game.js").read_text()
+
+
+@needs_node
+def test_lab_lines_are_recorded_and_used():
+    data = gv.load_game_data()
+    keys = {line.key for line in gv.collect_lines(data)}
+    assert set(data["LAB_LINES"]) <= keys
+    lab = (ROOT / "mockup" / "lab.js").read_text()
+    for key in data["LAB_LINES"]:
+        assert f'"{key}"' in lab          # lab.js asks the Narrator for this clip by name

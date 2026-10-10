@@ -1,4 +1,4 @@
-"""Record Professor Volt's lines with ElevenLabs ("Crazy Scientist" voice).
+"""Record the professor's lines with ElevenLabs ("Crazy Scientist" voice).
 
 Usage:
     python3 tools/generate_voice.py             # record new and changed lines
@@ -7,7 +7,7 @@ Usage:
     python3 tools/generate_voice.py --list      # print every line, record nothing
 
 Reads the API key from the ELEVENLABS_API_KEY environment variable. The lines come
-straight from mockup/levels.js (evaluated with node), so editing a line there and
+straight from mockup/levels.js and mockup/lab.js (evaluated with node), so editing a line there and
 re-running this script re-records exactly that line: assets/voice/manifest.json keeps
 the text each clip was recorded from.
 """
@@ -28,6 +28,7 @@ import requests
 
 ROOT = Path(__file__).resolve().parent.parent
 LEVELS_JS = ROOT / "mockup" / "levels.js"
+LAB_JS = ROOT / "mockup" / "lab.js"
 VOICE_DIR = ROOT / "assets" / "voice"
 MANIFEST = VOICE_DIR / "manifest.json"
 
@@ -83,20 +84,22 @@ def speech_text(text: str, mood: str = "") -> str:
     return f"[{mood}] {text}" if mood else text
 
 
-def load_game_data(levels_js: Path = LEVELS_JS) -> dict:
-    """Evaluate levels.js in node and return {"LEVELS": [...], "CARDS": {...}}."""
+def load_game_data(levels_js: Path = LEVELS_JS, lab_js: Path = LAB_JS) -> dict:
+    """Evaluate levels.js and lab.js in node and return {"LEVELS": [...], "CARDS": {...}, "LAB_LINES": {...}}."""
     script = (
         "const vm = require('vm'); const fs = require('fs'); const ctx = {};"
-        "vm.runInNewContext(fs.readFileSync(process.argv[1], 'utf8') + ';this.out = {LEVELS, CARDS};', ctx);"
+        "const src = process.argv.slice(1).map((f) => fs.readFileSync(f, 'utf8')).join(';\\n');"
+        "vm.runInNewContext(src + ';this.out = {LEVELS, CARDS, LAB_LINES};', ctx);"
         "process.stdout.write(JSON.stringify(ctx.out));"
     )
-    out = subprocess.run(["node", "-e", script, str(levels_js)], check=True, capture_output=True, text=True)
+    out = subprocess.run(["node", "-e", script, str(levels_js), str(lab_js)], check=True, capture_output=True, text=True)
     return json.loads(out.stdout)
 
 
 def collect_lines(data: dict) -> list[Line]:
-    """Every line Professor Volt says, keyed the way mockup/game.js asks for them."""
+    """Every line the professor says, keyed the way mockup/game.js and mockup/lab.js ask for them."""
     lines = [Line("not_now", NOT_NOW)]
+    lines += [Line(key, text, "excited") for key, text in data.get("LAB_LINES", {}).items()]
     lines += [Line(f"fact_{key}", card["fact"]) for key, card in data["CARDS"].items()]
     for level in data["LEVELS"]:
         n = level["id"]

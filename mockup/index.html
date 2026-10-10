@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>מגיני האנרגיה</title>
+<title>המעבדה של פרופסור מדעני</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Suez+One&family=Rubik:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
@@ -37,7 +37,7 @@
     <div class="chain" id="chain"></div>
 
     <!-- Characters -->
-    <div class="actor professor" id="professor" role="img" aria-label="פרופסור וולט"><div class="rig boil"><img alt=""><img alt=""></div></div>
+    <div class="actor professor" id="professor" role="img" aria-label="פרופסור מדעני"><div class="rig boil"><img alt=""><img alt=""></div></div>
     <div class="bubble" id="bubble"><p id="bubble-text"></p></div>
     <div class="actor sparky" id="sparky" role="img" aria-label="ספארקי"><div class="rig boil"><img alt=""><img alt=""></div></div>
 
@@ -122,25 +122,44 @@
       <div class="sheet">
         <header class="sheet-head">
           <div class="sheet-title">
-            <h2 id="quiz-title">הבוחן של פרופסור וולט</h2>
+            <h2 id="quiz-title">הבוחן של פרופסור מדעני</h2>
             <small id="quiz-level">שלב 1 · הלייזר הסולארי</small>
           </div>
           <ol class="dots" id="quiz-dots" aria-label="התקדמות בבוחן"></ol>
         </header>
         <div class="sheet-body" id="quiz-body" aria-live="polite"></div>
       </div>
-      <div class="actor quiz-professor" id="quiz-professor" role="img" aria-label="פרופסור וולט"><div class="rig boil"><img alt=""><img alt=""></div></div>
+      <div class="actor quiz-professor" id="quiz-professor" role="img" aria-label="פרופסור מדעני"><div class="rig boil"><img alt=""><img alt=""></div></div>
       <div class="actor quiz-sparky" id="quiz-sparky" role="img" aria-label="ספארקי"><div class="rig boil"><img alt=""><img alt=""></div></div>
     </section>
 
     <!-- Level map -->
     <section class="levels" id="levels" aria-labelledby="levels-title">
       <div class="levels-bg"></div>
+      <button class="hud-btn lab-btn" id="btn-lab" type="button">→ למעבדה</button>
       <header class="levels-head">
         <h1 id="levels-title">מגיני האנרגיה</h1>
         <p>החייזרים תוקפים! בחרו שלב, בנו את שרשרת האנרגיה – וגרשו אותם.</p>
       </header>
       <div class="level-grid" id="level-grid"></div>
+    </section>
+
+    <!-- Lab hub: one corner per game (built by lab.js) -->
+    <section class="lab" id="lab" aria-labelledby="lab-title">
+      <div class="lab-bg"></div>
+      <h1 class="lab-title" id="lab-title"></h1>
+      <div class="lab-corners" id="lab-corners"></div>
+      <div class="actor lab-professor" id="lab-professor" role="img" aria-label="פרופסור מדעני"><div class="rig boil"><img alt=""><img alt=""></div></div>
+      <div class="bubble lab-bubble" id="lab-bubble"><p id="lab-bubble-text"></p></div>
+    </section>
+
+    <!-- Splash title screen -->
+    <section class="splash" id="splash" aria-labelledby="splash-title">
+      <div class="splash-bg"></div>
+      <h1 class="splash-title" id="splash-title"></h1>
+      <p class="splash-sub">מעבדה מלאה בניסויים, המצאות ומשחקים</p>
+      <div class="actor splash-professor" id="splash-professor" role="img" aria-label="פרופסור מדעני"><div class="rig boil"><img alt=""><img alt=""></div></div>
+      <p class="splash-tap">לחצו כדי להיכנס</p>
     </section>
 
     <!-- Old film overlay -->
@@ -163,5 +182,6 @@
 <script src="fx.js"></script>
 <script src="sound.js"></script>
 <script src="game.js"></script>
+<script src="lab.js"></script>
 </body>
 </html>

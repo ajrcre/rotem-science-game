@@ -354,6 +354,22 @@ ASSETS += [
         "furniture, no text.",
         aspect="16:9", kind="background", references=["professor", "lab_bg"],
     ),
+    AssetSpec(
+        "lab_hub",
+        "Wide background painting of one big cozy 1930s mad-scientist laboratory hall, seen from the front, "
+        "with four separate science stations standing on the wooden plank floor, each clearly apart from the "
+        "others with some empty floor between them, all lit by the same warm hanging lamps and sharing the same "
+        "brick wall, copper pipes and big round night-sky window: on the far left a chemistry table with "
+        "bubbling flasks and colored smoke; left of center the biggest station, an energy workbench with a "
+        "dynamo generator with a crank, batteries, a glowing bulb, a small Tesla coil and a little windmill "
+        "under a big lightning-bolt sign; right of center a magnets and electricity cabinet with a red "
+        "horseshoe magnet, copper coils and a switchboard; and on the right a space corner with a brass "
+        "telescope, a ringed planet globe and a toy rocket, under the round window. The far right edge of "
+        "the floor is left empty for a character to stand. Draw the stations exactly as in the reference "
+        "images. No characters, no text.",
+        aspect="16:9", kind="background",
+        references=["lab_room", "corner_chemistry", "corner_energy", "corner_electric", "corner_space"],
+    ),
     sprite("corner_energy", "An energy corner of a laboratory: a wooden workbench holding a brass dynamo "
            "generator with a crank, a big battery, a glowing light bulb, a small Tesla coil and a little "
            "windmill, cables connecting them, a lightning-bolt sign above it with no letters. Seen from the "

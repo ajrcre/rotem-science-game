@@ -1061,4 +1061,3 @@ $("btn-replay").addEventListener("click", () => playLevel(game.level));
 $("btn-next").addEventListener("click", () => nextLevel(game.level));
 $("btn-quiz").addEventListener("click", () => quiz.open(game.level));
 $("btn-map").addEventListener("click", showMap);
-LevelMap.show();
