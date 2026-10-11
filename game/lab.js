@@ -138,7 +138,7 @@ const Screens = {
   // The screen the address asks for (the splash when it names none).
   fromUrl() {
     const name = decodeURIComponent(location.hash.slice(1));
-    return Object.hasOwn(this.states, name) ? name : "splash";
+    return Object.prototype.hasOwnProperty.call(this.states, name) ? name : "splash";   // iOS < 15.4 lacks Object.hasOwn
   },
 
   // `push: false` when the address already says where we're going (back button, typed link).

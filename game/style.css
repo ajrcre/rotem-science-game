@@ -23,8 +23,10 @@ body { font-family: var(--font-body); color: var(--ink); }
 #stage {
   position: absolute; left: 50%; top: 50%; width: 1600px; height: 900px;
   transform-origin: center; overflow: clip; background: #2a1d14;
-  animation: flicker 5s ease-in-out infinite;
 }
+/* Projector flicker: a faint dark veil, not a filter on the whole stage (phones ran out of layer memory). */
+#stage::after { content: ""; position: absolute; inset: 0; z-index: 53; pointer-events: none; background: #000;
+  opacity: 0; animation: flicker 5s ease-in-out infinite; }
 
 .bg {
   position: absolute; inset: 0;
@@ -264,7 +266,7 @@ body { font-family: var(--font-body); color: var(--ink); }
 .iris.closed { --iris: 0px; }
 
 /* ---------- Keyframes ---------- */
-@keyframes flicker { 0%, 100% { filter: brightness(1); } 30% { filter: brightness(.97); } 55% { filter: brightness(1.02); } 80% { filter: brightness(.985); } }
+@keyframes flicker { 0%, 100% { opacity: 0; } 30% { opacity: .03; } 55% { opacity: 0; } 80% { opacity: .015; } }
 @keyframes flee { 0% { transform: translate(0, 0); } 30% { transform: translate(30px, 20px) scale(1.1, .9); } 100% { transform: translate(-420px, -380px) scale(.4) rotate(-40deg); opacity: 0; } }
 @keyframes march { to { stroke-dashoffset: -32; } }
 @keyframes ghost-pull { 0% { transform: rotate(-28deg); opacity: 0; } 12% { opacity: .55; } 60% { transform: rotate(62deg); opacity: .55; }
@@ -293,6 +295,13 @@ body { font-family: var(--font-body); color: var(--ink); }
 @keyframes flash { 0% { opacity: .95; } 100% { opacity: 0; } }
 @keyframes star-burst { 0% { transform: translate(0, 0) scale(.3) rotate(0); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(1.2) rotate(360deg); opacity: 0; } }
 @keyframes scratch { 0% { opacity: 0; left: 20%; } 10% { opacity: 1; left: 23%; } 12% { opacity: 0; } 40% { opacity: 1; left: 71%; } 42% { opacity: 0; } 70% { opacity: 1; left: 48%; } 71% { opacity: 0; } }
+
+/* Phones and tablets: mobile Safari drops elements under an animated SVG filter, and blending the grain
+   over the whole stage costs layer memory it doesn't have. They get the film look without both. */
+@media (hover: none) and (pointer: coarse) {
+  .boil, .porthole-frame, .credits-card { filter: none; }
+  .grain { display: none; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }

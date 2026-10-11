@@ -10,6 +10,8 @@ const restart = (el, cls) => { el.classList.remove(cls); void el.offsetWidth; el
 const frameSrc = (actor, pose) => `${ART}frames/${actor}/${pose}.webp`;
 const rand = (a, b) => a + Math.random() * (b - a);
 const TAU = Math.PI * 2;
+// Phones and tablets get a lighter film look (no SVG line boil, no grain): see the matching @media in style.css.
+const LITE = matchMedia("(hover: none) and (pointer: coarse)").matches;
 
 function fitStage() {
   const stage = $("stage");
@@ -249,6 +251,7 @@ class Actor {
 // ---------- Film effects ----------
 const Film = {
   start() {
+    if (LITE) return;                      // neither the grain nor the line boil is drawn there
     const c = $("grain");
     c.width = 400; c.height = 225;
     const ctx = c.getContext("2d");
