@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://rotem-science-game.vercel.app/sitemap.xml

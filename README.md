@@ -42,6 +42,15 @@ python3 tools/optimize_images.py            # רק תמונות חדשות או 
 python3 tools/optimize_images.py --force    # הכול מחדש
 ```
 
+## שיתוף וחיפוש
+התמונה שמופיעה כששולחים קישור למשחק (וואטסאפ, פייסבוק וכו'), האייקונים וה-favicon נוצרים מהאיורים ומהגופנים של המשחק:
+
+```bash
+python3 tools/make_share_images.py          # assets/share/ ו-favicon.ico
+```
+
+הטקסטים לשיתוף ולמנועי חיפוש נמצאים ב-`<head>` של `game/index.html`. אם משנים את הכותרת, משנים אותה גם ב-`TITLE` שבסקריפט ומריצים אותו מחדש. הכתובת של האתר (`rotem-science-game.vercel.app`) כתובה גם ב-`robots.txt` וב-`sitemap.xml`.
+
 הספרייטים נוצרים על רקע מג'נטה, והסקריפט מסיר את הרקע אוטומטית. הקבצים נשמרים ב-`assets/art/`.
 
 ## ייצור צלילים
