@@ -638,7 +638,7 @@ body { font-family: var(--font-body); color: var(--ink); }
 .fly.b { animation-duration: 1.9s; animation-direction: reverse; }
 
 /* The rat's frames share one padded canvas (tools: PoseAligner); the body is 250px wide inside it. */
-.machine-rat { left: 923px; top: 18px; width: 425px; height: 311px; z-index: 4; }
+.machine-rat { left: 952px; top: 138px; width: 255px; height: 187px; z-index: 4; }
 .machine-rat .flip { position: absolute; inset: 0; transform: scaleX(-1); }
 .machine-rat .rig { transform-origin: 50% 100%; }
 .burp { position: absolute; z-index: 5; display: none; font: 34px var(--font-title); color: var(--ink);
@@ -648,7 +648,7 @@ body { font-family: var(--font-body); color: var(--ink); }
 .machine-title { left: 90px; transform: none; top: 14px; padding: 6px 26px; z-index: 6; }
 .machine-title .title-text strong { font-size: 36px; }
 .machine-lab-btn { right: 30px; top: 26px; }
-.machine-professor { left: -40px; bottom: 205px; width: 300px; height: 427px; z-index: 5; }
+.machine-professor { left: -90px; bottom: 205px; width: 420px; height: 598px; z-index: 5; }
 .machine-bubble { left: 790px; right: auto; top: 14px; bottom: auto; width: 600px; min-height: 96px; z-index: 7; }
 .machine-bubble::after { right: auto; left: -34px; bottom: 26px; border-left: 5px solid var(--ink); border-right: none;
   transform: skewY(28deg); border-radius: 0 0 0 22px; }

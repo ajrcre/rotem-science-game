@@ -36,8 +36,8 @@ const G = {
     weight: { x: 855, y: 0, w: 112, h: 92, anchor: "pan" },          // follows the right pan
   },
   panFloor: 22,           // pan rim → where things sit inside a pan
-  rat: { x: 923, body: 87, w: 250 },   // element left; the body starts `body` px into the frame canvas
-  cheese: { x: 250, w: 200, h: 152 },
+  rat: { x: 952, body: 52, w: 150 },   // element left; the body starts `body` px into the frame canvas
+  cheese: { x: 330, w: 130, h: 99 },
 };
 
 // ---------- Part art (Factory): one painted picture (or a few layers) per part ----------
@@ -247,12 +247,12 @@ class MachineView {
                                     preserveAspectRatio: "xMidYMax meet" }, s);
     this.cheese = cheese;
     const stink = svgEl("g", { class: "stink" }, s);
-    for (const dx of [60, 105, 150]) {
-      const x = c.x + dx, y = G.ledgeY - c.h + 10;
+    for (const f of [0.3, 0.55, 0.8]) {
+      const x = c.x + f * c.w, y = G.ledgeY - c.h + 10;
       svgEl("path", { d: `M${x} ${y} c-12 -12 12 -18 0 -30 c-12 -12 12 -18 0 -30` }, stink);
     }
     this.stink = stink;
-    for (const [fx, fy, cls] of [[c.x + 90, G.ledgeY - 150, "fly"], [c.x + 140, G.ledgeY - 120, "fly b"]]) {
+    for (const [fx, fy, cls] of [[c.x + 0.45 * c.w, G.ledgeY - c.h - 50, "fly"], [c.x + 0.75 * c.w, G.ledgeY - c.h - 25, "fly b"]]) {
       const at = svgEl("g", { transform: `translate(${fx} ${fy})` }, s);
       const fly = svgEl("g", { class: cls }, at);
       svgEl("circle", { cx: 26, cy: 0, r: 4, fill: "#1c1410" }, fly);
@@ -778,7 +778,7 @@ class MachineGame {
       this.rat.play(["eat_1", "eat_2", "eat_3"], { fps: 6, ms: 500, end: "eat_3" });
       this.rat.rig.squash.kick(1.6);
       this.view.bite(n);
-      this.fx.crumbs(G.cheese.x + G.cheese.w + 10, G.ledgeY - 50);
+      this.fx.crumbs(G.cheese.x + G.cheese.w, G.ledgeY - 0.4 * G.cheese.h);
       await wait(520);
       if (!live()) return;
     }
@@ -789,7 +789,7 @@ class MachineGame {
     this.rat.play(["full_1", "full_2"], { fps: 2, ms: Infinity });
     const burp = $("machine-burp");
     const r = stageRect(ratEl);
-    Object.assign(burp.style, { left: `${r.x - 30}px`, top: `${r.y - 50}px` });
+    Object.assign(burp.style, { left: `${r.x + r.w * 0.55}px`, top: `${r.y + r.h * 0.1}px` });
     restart(burp, "show");
     await wait(1400);
     if (!live()) return;
