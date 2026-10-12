@@ -27,70 +27,41 @@ const G = {
   arm: 140,               // pivot → each pan
   ropeArm: 205,           // pivot → the rope's hook (out past the left pan, clear of the ice)
   maxTilt: 10,            // degrees at full tilt
-  hang: 115,              // beam → pan
-  bucket: { x: 440, top: 612, w: 92 },
+  hang: 95,               // beam → pan rim
+  bucket: { x: 440, w: 110, rim: 0.37 },   // the painting's rim sits 37% down from its top
   tray: { left: [477, 587], right: [663, 556] },
   slots: {
     heat:   { x: 575, y: 645, w: 124, h: 100, anchor: "bottom" },   // x = center, y = center of the box
     guard:  { x: 570, y: 568, w: 196, h: 44, anchor: "center" },
     weight: { x: 855, y: 0, w: 112, h: 92, anchor: "pan" },          // follows the right pan
   },
+  panFloor: 22,           // pan rim → where things sit inside a pan
   rat: { x: 923, body: 87, w: 250 },   // element left; the body starts `body` px into the frame canvas
   cheese: { x: 250, w: 200, h: 152 },
 };
 
-// ---------- Part art (Factory): one drawing per part, used on the cards and in the scene ----------
-// Each draws into a 120×120 box; "bottom" parts stand on y=116, "center" parts sit around y=60.
+// ---------- Part art (Factory): one painted picture (or a few layers) per part ----------
+// Used on the cards and in the scene. Each part fills a 120×120 box; "bottom" parts stand on y=116,
+// "center" parts sit around y=60. Layers that move carry a class: the flame frames, the fan's rotor, the wet sponge.
+const PARTS_ART = `${MACHINE_ART}parts/`;
+const partImg = (name, x, y, w, h, { cls = "", align = "xMidYMax", fit = "meet", extra = "" } = {}) =>
+  `<image class="${cls}" href="${PARTS_ART}${name}.webp" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="${fit === "none" ? "none" : `${align} ${fit}`}" ${extra}/>`;
+
 const PART_ART = {
   candle: () => `
-    <ellipse cx="60" cy="110" rx="40" ry="9" fill="#b98a4a" class="ink"/>
-    <rect x="44" y="56" width="32" height="54" rx="5" fill="#f5ead0" class="ink"/>
-    <path d="M47 62 q6 8 0 16" fill="none" stroke="#e5d3a8" stroke-width="5"/>
-    <line x1="60" y1="56" x2="60" y2="46" class="thin"/>
-    <ellipse class="flame-glow" cx="60" cy="34" rx="34" ry="34" fill="url(#m-flame-glow)"/>
-    <path class="flame" d="M60 6 C72 22 76 34 70 44 C66 52 54 52 50 44 C44 34 50 22 60 6 Z" fill="#ffb53a" stroke="#1c1410" stroke-width="4"/>
-    <path class="flame" d="M60 24 C66 32 67 39 63 44 C60 48 56 46 55 42 C53 36 56 30 60 24 Z" fill="#fff3b0"/>`,
+    ${partImg("candle", 10, 30, 100, 86)}
+    <ellipse class="flame-glow" cx="55" cy="16" rx="34" ry="34" fill="url(#m-flame-glow)"/>
+    <g class="flame">${[1, 2, 3].map((i) => partImg(`flame_${i}`, 44, 0, 22, 34, { cls: `flame-frame f${i}` })).join("")}</g>`,
   fan: () => `
-    <rect x="40" y="104" width="40" height="10" rx="4" fill="#5c6a73" class="ink"/>
-    <rect x="55" y="80" width="10" height="26" fill="#7d8b94" class="ink"/>
-    <circle cx="60" cy="50" r="36" fill="#d9e3e6" class="ink"/>
-    <g class="blades">
-      <path d="M60 50 C50 30 62 18 68 24 C72 30 66 42 60 50 Z" fill="#7aa7c7" class="ink"/>
-      <path d="M60 50 C80 44 88 58 82 64 C76 68 66 60 60 50 Z" fill="#7aa7c7" class="ink"/>
-      <path d="M60 50 C52 70 38 70 36 62 C36 56 48 52 60 50 Z" fill="#7aa7c7" class="ink"/>
-      <circle cx="60" cy="50" r="7" fill="#c08a3e" class="ink"/>
-    </g>
-    <circle cx="60" cy="50" r="36" fill="none" stroke="#1c1410" stroke-width="2" stroke-dasharray="3 6"/>`,
-  icepack: () => `
-    <rect x="18" y="38" width="84" height="74" rx="20" fill="#9fd3f0" class="ink"/>
-    <rect x="44" y="28" width="32" height="14" rx="4" fill="#5f9fc8" class="ink"/>
-    <g stroke="#fff" stroke-width="5" stroke-linecap="round">
-      <line x1="60" y1="54" x2="60" y2="96"/><line x1="42" y1="64" x2="78" y2="86"/><line x1="42" y1="86" x2="78" y2="64"/>
-    </g>`,
-  tray: () => `
-    <polygon points="2,71 118,52 118,60 2,79" fill="#b9c3c9" stroke="#1c1410" stroke-width="3" stroke-linejoin="round"/>
-    <polygon points="2,71 118,52 118,47 2,66" fill="#e3e9ec" stroke="#1c1410" stroke-width="3" stroke-linejoin="round"/>
-    <circle cx="30" cy="70" r="2.5" fill="#1c1410"/><circle cx="90" cy="60" r="2.5" fill="#1c1410"/>`,
-  board: () => `
-    <rect x="4" y="50" width="112" height="18" rx="3" fill="#a86f3c" class="ink"/>
-    <path d="M14 58 q20 -5 40 0 t40 0" fill="none" stroke="#6b4226" stroke-width="3"/>
-    <circle cx="96" cy="59" r="3" fill="#6b4226"/>`,
-  sponge: () => `
-    <rect class="sponge-body ink" x="22" y="44" width="76" height="30" rx="8" fill="#f2d14a"/>
-    <g fill="#c9a42a"><circle cx="38" cy="54" r="4"/><circle cx="58" cy="62" r="5"/><circle cx="80" cy="52" r="4"/><circle cx="86" cy="66" r="3"/><circle cx="46" cy="67" r="3"/></g>`,
-  metal: () => `
-    <path d="M28 116 L38 62 L82 62 L92 116 Z" fill="#7f878c" class="ink"/>
-    <path d="M44 62 C44 40 76 40 76 62" fill="none" stroke="#1c1410" stroke-width="10"/>
-    <path d="M44 62 C44 40 76 40 76 62" fill="none" stroke="#7f878c" stroke-width="4"/>
-    <path d="M42 70 L36 108" stroke="#c4cbcf" stroke-width="5" stroke-linecap="round"/>`,
-  cotton: () => `
-    <path d="M30 114 C14 114 12 92 26 88 C22 70 42 62 52 72 C56 58 78 58 82 74 C98 70 108 88 96 98 C106 108 96 118 86 114 Z"
-      fill="#fbfaf5" class="ink"/>
-    <path d="M40 96 q8 -6 16 0 M64 90 q8 -6 14 2" fill="none" stroke="#d8d4c8" stroke-width="4" stroke-linecap="round"/>`,
-  feather: () => `
-    <path d="M22 112 C40 70 70 40 104 20 C100 52 76 90 30 108 Z" fill="#f4efe4" class="ink"/>
-    <path d="M22 112 C46 80 72 52 100 26" fill="none" stroke="#1c1410" stroke-width="3"/>
-    <path d="M54 76 l-14 -4 M66 64 l-12 -6 M62 82 l10 6 M76 66 l10 6" stroke="#b9b2a2" stroke-width="3" stroke-linecap="round"/>`,
+    <g class="blades">${partImg("fan_blades", 32, 22, 54, 54, { align: "xMidYMid" })}</g>
+    ${partImg("fan", 14, 10, 92, 106)}`,
+  icepack: () => partImg("icepack", 12, 30, 96, 86),
+  tray: () => `<g transform="rotate(-9.3 60 62)">${partImg("tray", 0, 52, 120, 20, { align: "xMidYMid" })}</g>`,
+  board: () => partImg("board", 2, 50, 116, 20, { fit: "none" }),
+  sponge: () => `${partImg("sponge", 22, 40, 76, 38, { fit: "none" })}${partImg("sponge_wet", 22, 40, 76, 38, { fit: "none", cls: "sponge-wet", extra: 'opacity="0"' })}`,
+  metal: () => partImg("metal", 16, 40, 88, 76),
+  cotton: () => partImg("cotton", 16, 52, 88, 64),
+  feather: () => partImg("feather", 10, 34, 100, 82),
 };
 
 // Shared gradients, defined once in the scene SVG and once per card.
@@ -256,17 +227,14 @@ class MachineView {
   build() {
     const s = this.svg;
     s.innerHTML = `<defs>${ART_DEFS}
-      <clipPath id="m-bucket-clip"><path d="M${G.bucket.x - 42} ${G.bucket.top} L${G.bucket.x + 42} ${G.bucket.top} L${G.bucket.x + 34} ${G.floor - 4} L${G.bucket.x - 34} ${G.floor - 4} Z"/></clipPath>
+      <clipPath id="m-bucket-clip"><path d="M${G.bucket.x - 44} ${G.floor - 92} L${G.bucket.x + 44} ${G.floor - 92} L${G.bucket.x + 38} ${G.floor - 8} L${G.bucket.x - 38} ${G.floor - 8} Z"/></clipPath>
+      <clipPath id="m-sieve-back"><rect x="-90" y="-40" width="180" height="40"/></clipPath>
+      <clipPath id="m-sieve-front"><rect x="-90" y="0" width="180" height="90"/></clipPath>
     </defs>`;
 
     // Shelves: the cheese on the left, the rat on the right.
     for (const [x1, x2] of [G.cheeseLedge, G.ratLedge]) {
-      const g = svgEl("g", {}, s);
-      for (const bx of [x1 + 40, x2 - 40]) {
-        svgEl("path", { d: `M${bx - 18} ${G.ledgeY + 26} L${bx + 18} ${G.ledgeY + 26} L${bx} ${G.ledgeY + 90} Z`, fill: "#5a3820", class: "ink" }, g);
-      }
-      svgEl("rect", { x: x1, y: G.ledgeY, width: x2 - x1, height: 28, rx: 4, fill: "#8a5a32", class: "ink" }, g);
-      svgEl("path", { d: `M${x1 + 14} ${G.ledgeY + 12} H${x2 - 14}`, stroke: "#6b4226", "stroke-width": 3 }, g);
+      s.insertAdjacentHTML("beforeend", partImg("shelf", x1 - 12, G.ledgeY - 5, x2 - x1 + 24, 100, { fit: "none" }));
     }
 
     // Ceiling pulley on its bracket.
@@ -292,47 +260,46 @@ class MachineView {
     }
 
     // The bucket the tray pours into, with its water level.
+    // The painted bucket; its water shows through the tin as a translucent layer, so kids see it fill up.
     const b = G.bucket;
-    svgEl("path", { d: `M${b.x - 46} ${b.top} L${b.x + 46} ${b.top} L${b.x + 37} ${G.floor} L${b.x - 37} ${G.floor} Z`, fill: "#9aa3a8", class: "ink" }, s);
-    this.water = svgEl("path", { fill: "#7cc1ea", "clip-path": "url(#m-bucket-clip)", opacity: 0.95 }, s);
-    svgEl("path", { d: `M${b.x - 46} ${b.top} L${b.x + 46} ${b.top}`, class: "ink", fill: "none" }, s);
-    svgEl("path", { d: `M${b.x - 40} ${b.top} C${b.x - 40} ${b.top - 46} ${b.x + 40} ${b.top - 46} ${b.x + 40} ${b.top}`, fill: "none", class: "thin" }, s);
+    const bh = b.w / 0.716;
+    s.insertAdjacentHTML("beforeend", partImg("bucket", b.x - b.w / 2, G.floor - bh, b.w, bh));
+    this.bucketTop = G.floor - bh + b.rim * bh;
+    this.water = svgEl("path", { fill: "#7cc1ea", "clip-path": "url(#m-bucket-clip)", opacity: 0.6 }, s);
 
     // The scale: post, beam, chains and pans. The beam and pans move in apply().
     const pv = G.pivot;
-    svgEl("ellipse", { cx: pv.x, cy: G.floor - 6, rx: 70, ry: 14, fill: "#a87a34", class: "ink" }, s);
-    svgEl("rect", { x: pv.x - 9, y: pv.y, width: 18, height: G.floor - pv.y - 10, fill: "#c99a45", class: "ink" }, s);
+    const postH = (G.floor - pv.y) / 0.96, postW = postH * 0.644;        // the knob sits 4% down the painting
+    s.insertAdjacentHTML("beforeend", partImg("scale_post", pv.x - 0.495 * postW, pv.y - 0.04 * postH, postW, postH));
     this.chainsInk = svgEl("path", { fill: "none", stroke: "#1c1410", "stroke-width": 6, "stroke-linecap": "round" }, s);
     this.chains = svgEl("path", { fill: "none", stroke: "#e0b860", "stroke-width": 2.5, "stroke-dasharray": "5 3" }, s);
     this.beam = svgEl("g", {}, s);
-    svgEl("rect", { x: pv.x - G.ropeArm - 12, y: pv.y - 8, width: 2 * G.ropeArm + 24, height: 16, rx: 8, fill: "#d8a84e", class: "ink" }, this.beam);
-    svgEl("circle", { cx: pv.x - G.ropeArm, cy: pv.y, r: 6, fill: "#1c1410" }, this.beam);
-    svgEl("circle", { cx: pv.x, cy: pv.y, r: 12, fill: "#8a5a24", class: "ink" }, s);
+    const beamW = 2 * G.ropeArm + 30;
+    this.beam.insertAdjacentHTML("beforeend", partImg("scale_beam", pv.x - beamW / 2, pv.y - 22, beamW, 46, { fit: "none" }));
 
     // Left pan: a sieve with the ice in it (the ice is drawn first, so the sieve's rim covers its bottom).
     this.leftPan = svgEl("g", {}, s);
-    this.puddle = svgEl("ellipse", { cx: 0, cy: 6, rx: 50, ry: 5, fill: "#9fd6f2", opacity: 0 }, this.leftPan);
+    const sieve = (clip) => `<g clip-path="url(#${clip})">${partImg("sieve", -78, -14, 156, 75, { fit: "none" })}</g>`;
+    this.leftPan.insertAdjacentHTML("beforeend", sieve("m-sieve-back"));
+    this.puddle = svgEl("ellipse", { cx: 0, cy: 22, rx: 52, ry: 6, fill: "#9fd6f2", opacity: 0 }, this.leftPan);
     this.glow = svgEl("ellipse", { cx: 0, cy: -40, rx: 80, ry: 70, fill: "url(#m-flame-glow)", opacity: 0 }, this.leftPan);
     // Four painted melt stages, stacked; apply() cross-fades them by how much ice is left.
     this.ice = [0, 1, 2, 3].map((i) => svgEl("image", { href: `${MACHINE_ART}ice_${i}.webp`, preserveAspectRatio: "xMidYMax meet" }, this.leftPan));
-    svgEl("path", { d: "M-76 0 L76 0 C66 22 -66 22 -76 0 Z", fill: "#c3ccd1", class: "ink" }, this.leftPan);
-    for (let i = -3; i <= 3; i++) svgEl("circle", { cx: i * 15, cy: 9 + (Math.abs(i) < 3 ? 2 : 0), r: 3, fill: "#1c1410" }, this.leftPan);
+    this.leftPan.insertAdjacentHTML("beforeend", sieve("m-sieve-front"));
 
     // Right pan, with the weight slot riding on it.
     this.rightPan = svgEl("g", {}, s);
-    svgEl("path", { d: "M-70 0 L70 0 C60 20 -60 20 -70 0 Z", fill: "#d8a84e", class: "ink" }, this.rightPan);
-    this.weightHolder = svgEl("g", {}, this.rightPan);
+    this.rightPan.insertAdjacentHTML("beforeend", partImg("pan", -72, -12, 144, 56, { fit: "none" }));
+    this.weightHolder = svgEl("g", { transform: `translate(0 ${G.panFloor})` }, this.rightPan);
 
     // Rope: bridge tip → over the pulley → down to the beam's left end.
     this.ropeInk = svgEl("path", { class: "rope-ink" }, s);
     this.rope = svgEl("path", { class: "rope" }, s);
-    svgEl("circle", { cx: p.x, cy: p.y, r: p.r, fill: "#c08a3e", class: "ink" }, s);
-    svgEl("circle", { cx: p.x, cy: p.y, r: 4, fill: "#1c1410" }, s);
+    s.insertAdjacentHTML("beforeend", partImg("pulley", p.x - 0.5 * 40, p.y - 0.6 * 53, 40, 53));
 
     // The drawbridge, hinged at the cheese shelf.
     this.bridge = svgEl("g", {}, s);
-    svgEl("rect", { x: G.hinge.x, y: G.hinge.y - 9, width: G.bridgeLen, height: 18, rx: 3, fill: "#9a6638", class: "ink" }, this.bridge);
-    for (let i = 1; i < 6; i++) svgEl("line", { x1: G.hinge.x + i * 50, y1: G.hinge.y - 9, x2: G.hinge.x + i * 50, y2: G.hinge.y + 9, class: "thin" }, this.bridge);
+    this.bridge.insertAdjacentHTML("beforeend", partImg("plank", G.hinge.x - 6, G.hinge.y - 13, G.bridgeLen + 12, 26, { fit: "none" }));
     svgEl("circle", { cx: G.hinge.x, cy: G.hinge.y, r: 9, fill: "#5c6a73", class: "ink" }, s);
 
     // Slots: the parts' holders, and a glowing "?" box while empty.
@@ -354,7 +321,7 @@ class MachineView {
       const r = { x: -d.w / 2, y: -d.h - 2, w: d.w, h: d.h };
       if (local) return r;
       const pan = this.pans?.right || { x: d.x, y: 500 };
-      return { x: pan.x + r.x, y: pan.y + r.y, w: r.w, h: r.h };
+      return { x: pan.x + r.x, y: pan.y + G.panFloor + r.y, w: r.w, h: r.h };
     }
     const top = d.anchor === "bottom" ? G.floor - d.h : d.y - d.h / 2;
     return { x: d.x - d.w / 2, y: top, w: d.w, h: d.h };
@@ -405,15 +372,15 @@ class MachineView {
 
     // Ice: shrinks and rounds off as it melts, glows while it is heated.
     const frac = state.ice / level.iceMass;
-    const side = 96 * Math.sqrt(frac);
+    const side = 80 * Math.sqrt(frac);
     const stage = (1 - frac) * 3 * Math.min(1, state.warm * 4 + (frac < 1 ? 1 : 0));   // 0 = solid … 3 = sliver
     const size = side * 1.3;                                // the paintings include a little puddle around the cube
     this.ice.forEach((img, i) => {
       const o = frac > 0.002 ? Math.max(0, 1 - Math.abs(stage - i)) : 0;
       img.setAttribute("opacity", o.toFixed(2));
-      Object.entries({ x: -size / 2, y: 12 - size, width: size, height: size }).forEach(([k, v]) => img.setAttribute(k, v.toFixed(1)));
+      Object.entries({ x: -size / 2, y: 30 - size, width: size, height: size }).forEach(([k, v]) => img.setAttribute(k, v.toFixed(1)));
     });
-    this.iceTop = this.pans.left.y + 6 - side;
+    this.iceTop = this.pans.left.y + 30 - size * 0.85;
     this.iceSide = side;
     const melting = state.warm > 0 && state.lit && frac > 0;
     this.glow.setAttribute("opacity", melting ? (0.45 + 0.2 * Math.sin(state.t * 7)).toFixed(2) : 0);
@@ -421,14 +388,13 @@ class MachineView {
 
     // Candle flame, sponge wetness, bucket water.
     this.parts.heat.classList.toggle("out", !state.lit);
-    const sponge = this.parts.guard.querySelector(".sponge-body");
-    if (sponge) sponge.setAttribute("fill", state.soaked ? `hsl(48, ${80 - state.soaked * 8}%, ${62 - state.soaked * 6}%)` : "#f2d14a");
+    this.parts.guard.querySelector(".sponge-wet")?.setAttribute("opacity", Math.min(1, state.soaked / 5).toFixed(2));
     this.setWater(state.bucket / level.iceMass, state.t);
   }
 
   setWater(frac, t = 0) {
     const b = G.bucket;
-    const level = G.floor - 6 - frac * 60;
+    const level = G.floor - 8 - frac * 70;
     const w = 3 * Math.sin(t * 5);
     this.water.setAttribute("d", frac > 0.001
       ? `M${b.x - 50} ${level + w} Q${b.x - 25} ${level - 4 - w} ${b.x} ${level} T${b.x + 50} ${level + w} L${b.x + 50} ${G.floor} L${b.x - 50} ${G.floor} Z`
@@ -711,7 +677,7 @@ class MachineGame {
         if (state.lit && state.warm > 0 && state.ice > 0 && T - lastBead > 0.12) {
           lastBead = T;
           const side = rand(-1, 1) > 0 ? 1 : -1;
-          v.fx.bead(v.pans.left.x + side * v.iceSide * rand(0.3, 0.5), v.iceTop + v.iceSide * 0.2, v.pans.left.y);
+          v.fx.bead(v.pans.left.x + side * v.iceSide * rand(0.3, 0.5), v.iceTop + v.iceSide * 0.2, v.pans.left.y + 28);
         }
         if ((heat === "fan" || heat === "icepack") && T - lastStreak > 0.05) {
           lastStreak = T;
@@ -731,7 +697,7 @@ class MachineGame {
     const v = this.view;
     if (e.type === "drop") {
       const x = v.pans.left.x - 45 + e.x * 90;
-      const y = v.pans.left.y + 12;
+      const y = v.pans.left.y + 58;            // the sieve's holey bottom
       const toY = v.dropTarget(x, e.to);
       v.fx.drop({ x, y, toY, onLand: (lx, ly) => this.land(e.to, lx, ly) });
     } else if (e.type === "doused") {

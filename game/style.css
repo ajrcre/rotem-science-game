@@ -623,6 +623,11 @@ body { font-family: var(--font-body); color: var(--ink); }
   transition: opacity .25s, scale .3s; }
 .flame-glow { animation: glow 1.1s ease-in-out infinite alternate; transition: opacity .3s; }
 .out .flame { opacity: 0; scale: .1 .1; }
+/* Three painted flame drawings take turns (on top of the wobble), so the flame flickers like a drawn cartoon. */
+.flame-frame { opacity: 0; animation: flame-frame .42s steps(1) infinite; }
+.flame-frame.f2 { animation-delay: -.14s; }
+.flame-frame.f3 { animation-delay: -.28s; }
+@keyframes flame-frame { 0% { opacity: 1; } 33.34%, 100% { opacity: 0; } }
 .out .flame-glow { opacity: 0; }
 .spin .blades { animation: spin .25s linear infinite; transform-box: fill-box; transform-origin: center; }
 .stink path { fill: none; stroke: #a8cf4a; stroke-width: 7; stroke-linecap: round; opacity: 0;

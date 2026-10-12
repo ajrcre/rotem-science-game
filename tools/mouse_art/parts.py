@@ -26,7 +26,7 @@ PARTS = {
     "fan": STRIP + "TWO pieces of the same 1930s brass desk fan, front view, same scale. LEFT: the fan WITHOUT its blades: round brass wire cage, central motor hub, stand and round heavy base. RIGHT: ONLY the fan's three-blade brass propeller rotor, front view.",
     "icepack": "A light-blue rubber ice-pack bag with a metal screw cap, a bit lumpy, frosty white patches, front view.",
     "tray": "A long thin tin sheet-metal drip tray seen exactly from the side, perfectly horizontal, about eight times longer than it is tall, a small raised rim at both ends, a few rivets, scratches and shine.",
-    "board": "A plain wooden plank seen from the side, perfectly horizontal, about eight times longer than it is tall, visible wood grain and a dark knot, rough sawn ends.",
+    "board": "A long THIN wooden lath / plank seen exactly from the side (only its thin edge), perfectly horizontal, about TEN times longer than it is tall, like a ruler, visible wood grain and a dark knot, rough sawn ends.",
     "sponge": STRIP + "TWO kitchen sponges of the same shape, side view. LEFT: dry, bright yellow with holes. RIGHT: the same sponge soaked with water: darker ochre, glistening wet, drops dripping from its bottom.",
     "metal": "A heavy old cast-iron scale weight, dark grey, trapezoid shape with a thick ring handle on top, scuffed edges.",
     "cotton": "A single fluffy ball of white cotton wool, soft wispy edges.",
@@ -37,7 +37,7 @@ PARTS = {
     "bucket": "A small old tin bucket seen from the front, slightly dented, with a wire handle standing up, the open top rim drawn as a thin ellipse, empty.",
     "plank": "A long narrow wooden drawbridge plank seen from the side, perfectly horizontal, about ten times longer than it is tall, with two dark iron bands and rivets.",
     "pulley": "A small iron pulley wheel with a groove and spokes, hanging from a short iron bracket, front view.",
-    "shelf": "A long wooden wall shelf seen from the front: a thick horizontal board about eight times longer than tall, with two carved wooden support brackets underneath near its ends.",
+    "shelf": "A long wooden wall shelf seen EXACTLY from the front, perfectly straight and level, NO perspective, top surface not visible: a thick horizontal board about eight times longer than tall, with two carved wooden support brackets underneath near its ends, mirror-symmetric.",
 }
 ASPECT = {"flames": "16:9", "fan": "16:9", "sponge": "16:9", "scale": "16:9", "tray": "16:9", "board": "16:9",
           "plank": "16:9", "shelf": "16:9", "sieve": "16:9", "pan": "16:9"}
