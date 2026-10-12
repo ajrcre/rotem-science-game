@@ -179,8 +179,9 @@ class Rig {
 
 // ---------- Actor: aligned pose frames with cross-fade + a Rig ----------
 class Actor {
-  // `crossfade: false` swaps frames outright: for a character that moves fast across the screen, where
-  // two overlapping poses would read as a ghost.
+  // `crossfade: false` draws every frame on a single layer and just swaps its picture (all frames are
+  // decoded up front): for a character that moves fast across the screen, where two overlapping or
+  // half-faded poses would read as a ghost.
   constructor(name, elementId = name, { crossfade = true } = {}) {
     this.name = name;
     this.el = $(elementId);
@@ -191,6 +192,12 @@ class Actor {
     this.front = 0;
     this.current = null;
     this.cache = poses.map((p) => Object.assign(new Image(), { src: frameSrc(name, p) }));   // preload
+    if (!crossfade) {
+      this.cache.forEach((img) => img.decode().catch(() => {}));
+      this.layers[1].remove();                            // one layer only
+      this.layers = [this.layers[0]];
+      this.layers[0].classList.add("on");
+    }
     this.timer = null;
     this.pose("idle", false);
   }
@@ -208,21 +215,19 @@ class Actor {
   pose(p, pop = true) {
     if (p === this.current) return;
     this.current = p;
+    if (!this.crossfade) {                                // single layer: just show the new picture
+      this.layers[0].src = frameSrc(this.name, p);
+      if (pop) this.rig.pop();
+      return;
+    }
     const back = this.layers[1 - this.front];
     const front = this.layers[this.front];
     back.src = frameSrc(this.name, p);
     back.style.zIndex = 2;
     front.style.zIndex = 1;
     clearTimeout(this.fadeTimer);
-    if (this.crossfade) {
-      back.classList.add("on");
-      this.fadeTimer = setTimeout(() => front.classList.remove("on"), 75);   // old frame vanishes once covered
-    } else {
-      // Swap in one paint, once the new frame is decoded: never two poses at once, never an empty frame.
-      const shown = p;
-      const swap = () => { if (this.current === shown) { back.classList.add("on"); front.classList.remove("on"); } };
-      back.decode().then(swap, swap);
-    }
+    back.classList.add("on");
+    this.fadeTimer = setTimeout(() => front.classList.remove("on"), 75);   // old frame vanishes once covered
     this.front = 1 - this.front;
     if (pop) this.rig.pop();
   }
