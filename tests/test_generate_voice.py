@@ -75,3 +75,40 @@ def test_lab_lines_are_recorded_and_used():
     lab = (ROOT / "game" / "lab.js").read_text()
     for key in data["LAB_LINES"]:
         assert f'"{key}"' in lab          # lab.js asks the Narrator for this clip by name
+
+
+# ---------- Niqqud for words the voice misreads ----------
+
+def test_niqqud_replaces_whole_words_only():
+    p = gv.Pronunciation({"_about": "a note, not a word", "תא": "תָּא", "התא": "הַתָּא"})
+    assert p.apply("התא הוא תא, לא תאורה.") == "הַתָּא הוא תָּא, לא תאורה."
+    assert p.words.keys() == {"תא", "התא"}
+
+
+def test_niqqud_comes_after_the_arrows_and_before_the_mood():
+    p = gv.Pronunciation({"מאור": "מֵאוֹר"})
+    assert gv.speech_text("ממיר: אור ← חשמל.", "excited", p) == "[excited] ממיר: מֵאוֹר לחשמל."
+
+
+def test_an_empty_dictionary_changes_nothing():
+    assert gv.Pronunciation({}).apply("אגורה") == "אגורה"
+    assert gv.Pronunciation.load(Path("/no/such/file.json")).words == {}
+
+
+def test_review_lists_words_and_the_lines_to_rerecord(tmp_path):
+    p = gv.Pronunciation({"אגורה": "אֲגוּרָה", "סכר": "סֶכֶר"})
+    lines = [gv.Line("a", "אנרגיה אגורה."), gv.Line("b", "בלי ניקוד.")]
+    out = gv.write_review(lines, p, manifest={}, out=tmp_path / "review.md").read_text("utf-8")
+    assert "| אגורה | אֲגוּרָה | 1 |" in out
+    assert "> אנרגיה אֲגוּרָה." in out
+    assert "`b`" not in out
+    assert "לא מופיעות באף שורה: סכר" in out
+
+
+@needs_node
+def test_every_niqqud_word_is_in_some_line_and_keeps_its_letters():
+    plain = " ".join(gv.speech_text(line.text) for line in gv.collect_lines(gv.load_game_data()))
+    strip = lambda s: "".join(ch for ch in s if not "֑" <= ch <= "ׇ")
+    for word, pointed in gv.PRONUNCIATION.words.items():
+        assert gv.Pronunciation({word: pointed}).found(plain), word
+        assert strip(pointed).replace("ו", "").replace("י", "") == word.replace("ו", "").replace("י", ""), word

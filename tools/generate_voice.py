@@ -10,6 +10,10 @@ Reads the API key from the ELEVENLABS_API_KEY environment variable. The lines co
 straight from game/levels.js and game/lab.js (evaluated with node), so editing a line there and
 re-running this script re-records exactly that line: assets/voice/manifest.json keeps
 the text each clip was recorded from.
+
+Words the voice tends to misread get niqqud from tools/voice_niqqud.json (only in what is sent to
+the voice; the speech bubble stays unpointed). Adding a word there re-records every line it is in.
+    python3 tools/generate_voice.py --review    # write docs/voice_niqqud_review.md, record nothing
 """
 from __future__ import annotations
 
@@ -31,6 +35,8 @@ LEVELS_JS = ROOT / "game" / "levels.js"
 LAB_JS = ROOT / "game" / "lab.js"
 VOICE_DIR = ROOT / "assets" / "voice"
 MANIFEST = VOICE_DIR / "manifest.json"
+NIQQUD = ROOT / "tools" / "voice_niqqud.json"
+REVIEW = ROOT / "docs" / "voice_niqqud_review.md"
 
 VOICE_ID = "X3RFC1XMToVuxnYV8wG8"   # "Crazy Scientist"
 MODEL = "eleven_v3"                  # the ElevenLabs model that speaks Hebrew
@@ -60,6 +66,41 @@ class StructuredLogger:
 logger = StructuredLogger("voice")
 
 
+# ---------- Pronunciation: niqqud for words the voice misreads ----------
+
+HEBREW = "\u0590-\u05FF"        # letters and niqqud
+
+
+class Pronunciation:
+    """Swaps whole words for their pointed spelling, e.g. אגורה → אֲגוּרָה (not "agora", the coin).
+
+    Words are matched as written, prefixes included ("בסוללה" is its own entry), and never inside a
+    longer word. Keys starting with "_" are notes, not words.
+    """
+
+    def __init__(self, words: dict[str, str]) -> None:
+        self.words = {k: v for k, v in words.items() if not k.startswith("_")}
+        alternatives = "|".join(re.escape(w) for w in sorted(self.words, key=len, reverse=True))
+        self.pattern = re.compile(rf"(?<![{HEBREW}\w])({alternatives})(?![{HEBREW}\w])") if self.words else None
+
+    @classmethod
+    def load(cls, path: Path = NIQQUD) -> "Pronunciation":
+        try:
+            return cls(json.loads(path.read_text("utf-8")))
+        except FileNotFoundError:
+            return cls({})
+
+    def apply(self, text: str) -> str:
+        return self.pattern.sub(lambda m: self.words[m.group(1)], text) if self.pattern else text
+
+    def found(self, text: str) -> list[str]:
+        """The dictionary words in a text, in order."""
+        return self.pattern.findall(text) if self.pattern else []
+
+
+PRONUNCIATION = Pronunciation.load()
+
+
 # ---------- Lines ----------
 
 @dataclass(frozen=True)
@@ -70,10 +111,10 @@ class Line:
 
     @property
     def speech(self) -> str:
-        return speech_text(self.text, self.mood)
+        return speech_text(self.text, self.mood, PRONUNCIATION)
 
 
-def speech_text(text: str, mood: str = "") -> str:
+def speech_text(text: str, mood: str = "", pronounce: Pronunciation | None = None) -> str:
     """Bubble text → something a voice can read aloud."""
     text = re.sub(r"[\U0001F300-\U0001FAFF✓✔]\s*", "", text)          # emoji, check marks
     text = re.sub(r" ← (?=[לו])", " ", text)                           # "את החשמל ← לקול" → "את החשמל לקול"
@@ -81,6 +122,8 @@ def speech_text(text: str, mood: str = "") -> str:
                   r"\1\2מ\3 ל\4", text)
     text = text.replace(" ← ", ", ואז ")                                 # longer chains: one step after another
     text = re.sub(r"\s+", " ", text).strip()
+    if pronounce:                                                        # after the arrows: \w skips niqqud
+        text = pronounce.apply(text)
     return f"[{mood}] {text}" if mood else text
 
 
@@ -180,12 +223,58 @@ class Recorder:
         self.manifest_path.write_text(json.dumps(self.manifest, ensure_ascii=False, indent=1, sort_keys=True) + "\n", "utf-8")
 
 
+# ---------- Review: every niqqud word and every line it changes, before anything is recorded ----------
+
+def write_review(lines: list[Line], pronounce: Pronunciation = PRONUNCIATION, manifest: dict | None = None,
+                 out: Path = REVIEW) -> Path:
+    """A Markdown page to check the niqqud by eye: the dictionary, then each line as the voice will get it."""
+    if manifest is None:
+        try:
+            manifest = json.loads(MANIFEST.read_text("utf-8"))
+        except FileNotFoundError:
+            manifest = {}
+    plain = {line.key: speech_text(line.text, line.mood) for line in lines}
+    uses: dict[str, list[str]] = {w: [] for w in pronounce.words}
+    for line in lines:
+        for word in dict.fromkeys(pronounce.found(plain[line.key])):
+            uses[word].append(line.key)
+    changed = [line for line in lines if pronounce.found(plain[line.key])]
+    stale = [line for line in changed if manifest.get(line.key) != line.speech]
+    md = [
+        "# ניקוד לקריינות – לבדיקה לפני הקלטה",
+        "",
+        "הניקוד נשלח רק לקול (ElevenLabs). בבועת הדיבור הטקסט נשאר בלי ניקוד.",
+        "כדי לתקן: עורכים את `tools/voice_niqqud.json` ומריצים `python3 tools/generate_voice.py --review` מחדש.",
+        "",
+        f"**{len(pronounce.words)} מילים מנוקדות · {len(changed)} שורות משתנות · {len(stale)} יוקלטו מחדש בהרצה הבאה**",
+        "",
+        "## המילים",
+        "",
+        "| מילה | עם ניקוד | בכמה שורות |",
+        "|---|---|---|",
+    ]
+    md += [f"| {w} | {v} | {len(uses[w])} |" for w, v in pronounce.words.items()]
+    unused = [w for w, keys in uses.items() if not keys]
+    if unused:
+        md += ["", "לא מופיעות באף שורה: " + ", ".join(unused)]
+    md += ["", "## השורות, כפי שהקול יקבל אותן", ""]
+    for line in changed:
+        md += [f"**`{line.key}`**", "", f"> {line.speech}", ""]
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text("\n".join(md), "utf-8")
+    return out
+
+
 def main(argv: list[str]) -> int:
     lines = collect_lines(load_game_data())
     names = [a for a in argv if not a.startswith("--")]
     if "--list" in argv:
         for line in lines:
             print(f"{line.key}\t{line.speech}")
+        return 0
+    if "--review" in argv:
+        path = write_review(lines)
+        logger.info("wrote niqqud review", path=path.relative_to(ROOT))
         return 0
     if names:
         unknown = set(names) - {l.key for l in lines}
