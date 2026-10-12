@@ -135,7 +135,7 @@ const Screens = {
     },
     chemistry: {
       music: "lab",             // sound for this game comes in its second phase
-      ready: () => loadImages([`${MACHINE_ART}rat.webp`, `${ART}lab_bg.webp`, frameSrc("professor", "idle")]),
+      ready: () => loadImages([`${MACHINE_ART}rat.webp`, `${MACHINE_ART}lab_bg.webp`, frameSrc("professor", "idle")]),
       enter() { $("machine").classList.add("show"); machineGame.start(); },
       leave() { machineGame.stop(); $("machine").classList.remove("show"); },
     },

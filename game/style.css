@@ -594,8 +594,8 @@ body { font-family: var(--font-body); color: var(--ink); }
 /* One SVG scene (machine.js draws and moves it), a canvas on top for water drops, smoke and crumbs. */
 .machine { position: absolute; inset: 0; z-index: 44; display: none; background: #2a1d14; }
 .machine.show { display: block; }
-.machine-bg { position: absolute; inset: 0; background: url("../assets/web/lab_bg.webp") center / cover;
-  filter: sepia(.45) saturate(.7) brightness(.42) blur(1.5px); transform: scale(1.02); }
+.machine-bg { position: absolute; inset: 0; background: url("../assets/web/machine/lab_bg.webp") center / cover;
+  filter: sepia(.2) saturate(.85) brightness(.7); }
 .machine-scene, .machine-fx { position: absolute; inset: 0; width: 1600px; height: 900px; }
 .machine-fx { pointer-events: none; z-index: 3; }
 .machine-scene { z-index: 2; overflow: visible; }
