@@ -50,6 +50,11 @@
 python3 -m pytest
 ```
 
+### לא צריך מפתחות API
+כדי לשחק, להריץ את המשחק מקומית, לשנות את הקוד או להריץ את הבדיקות לא צריך שום מפתח ושום חשבון. כל הגרפיקה, הצלילים, המוזיקה והקריינות כבר שמורים בריפו (ב-`assets/`), והמשחק לא פונה לשום שירות חיצוני מלבד הגופנים של Google Fonts.
+
+Gemini, ElevenLabs ו-Suno שימשו רק ליצירת הנכסים האלה. המפתחות `GEMINI_API_KEY` ו-`ELEVENLABS_API_KEY` נחוצים רק למי שרוצה ליצור גרפיקה, צלילים או קריינות חדשים, עם הכלים שמתוארים בהמשך. הכלים שרק מעבדים נכסים קיימים לא צריכים מפתח: `optimize_images.py`, `make_share_images.py`, `prepare_music.py` ו-`cut_lab_layers.py --reuse`.
+
 ## הרצה
 מגישים את התיקייה עם שרת מקומי ופותחים את `game/index.html`:
 
@@ -71,7 +76,7 @@ python3 tools/cut_lab_layers.py --reuse      # גזירה מחדש מהמסכו�
 ```
 
 ## ייצור גרפיקה
-הגרפיקה נוצרת עם Gemini (`gemini-3-pro-image`). צריך להגדיר את המשתנה `GEMINI_API_KEY` בסביבה.
+הגרפיקה נוצרה עם Gemini (`gemini-3-pro-image`), והיא כבר בריפו. רק כדי ליצור גרפיקה חדשה צריך להגדיר את המשתנה `GEMINI_API_KEY` בסביבה.
 
 ```bash
 python3 tools/generate_assets.py            # רק נכסים חסרים
@@ -99,7 +104,7 @@ python3 tools/make_share_images.py          # assets/share/ ו-favicon.ico
 
 
 ## ייצור צלילים
-אפקטי הקול במשחק נוצרו ב-ElevenLabs (יצירת צלילים מטקסט) ונשמרים ב-`assets/sfx/` כ-MP3. לכל צליל יש שתי גרסאות, והמשחק בוחר אחת באקראי ומשנה מעט את הגובה בכל השמעה, כדי שצלילים חוזרים לא יישמעו זהים. הרשימה נמצאת ב-`assets/sfx/variants.json`.
+אפקטי הקול במשחק נוצרו ב-ElevenLabs (יצירת צלילים מטקסט), והם כבר שמורים ב-`assets/sfx/` כ-MP3. מפתח של ElevenLabs צריך רק כדי ליצור צלילים חדשים. לכל צליל יש שתי גרסאות, והמשחק בוחר אחת באקראי ומשנה מעט את הגובה בכל השמעה, כדי שצלילים חוזרים לא יישמעו זהים. הרשימה נמצאת ב-`assets/sfx/variants.json`.
 
 הפרומפטים נמצאים ב-`tools/sfx_manifest.json`. `tools/fetch_sounds.py` מייצר את הצלילים (דורש `ELEVENLABS_API_KEY`, ומנוי בתשלום לשימוש מסחרי), חותך שקט, ממיר למונו 44.1kHz ומאזן עוצמה. התוצאות נשמרות ב-`assets/sfx_candidates/`:
 
@@ -130,7 +135,7 @@ python3 tools/prepare_music.py
 המוזיקה יורדת בעוצמה בזמן שהפרופסור מדבר. במעבדה מתנגנים גם צלילי אווירה אקראיים מ-ElevenLabs, כמו בעבוע, ניצוצות וקיטור (`amb_*` ב-`tools/sfx_manifest.json`), מכיוון הפינה שאליה הם שייכים.
 
 ## קריינות
-פרופסור מדעני מדבר בקול "Crazy Scientist" מ-ElevenLabs (מודל `eleven_v3`, שתומך בעברית). צריך להגדיר את המשתנה `ELEVENLABS_API_KEY` בסביבה.
+פרופסור מדעני מדבר בקול "Crazy Scientist" מ-ElevenLabs (מודל `eleven_v3`, שתומך בעברית). כל ההקלטות כבר שמורות בריפו. רק כדי להקליט שורות חדשות או ששונו צריך להגדיר את המשתנה `ELEVENLABS_API_KEY` בסביבה.
 הטקסטים נלקחים ישירות מ-`game/levels.js` ומ-`game/lab.js` (דרך node), והקבצים נשמרים ב-`assets/voice/`.
 
 ```bash
