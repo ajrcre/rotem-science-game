@@ -37,9 +37,14 @@ PARTS = {
     "bucket": "A small old tin bucket seen from the front, slightly dented, with a wire handle standing up, the open top rim drawn as a thin ellipse, empty.",
     "plank": "A long narrow wooden drawbridge plank seen from the side, perfectly horizontal, about ten times longer than it is tall, with two dark iron bands and rivets.",
     "pulley": "A small iron pulley wheel with a groove and spokes, hanging from a short iron bracket, front view.",
+    "rope": "A straight piece of thick twisted hemp rope, perfectly horizontal, seen from the side, about twenty times longer than it is thick, clear twisted strands, frayed fibres, warm tan colour.",
+    "hinge": "A small black iron strap hinge with a round knuckle and two big rivets, front view, slightly rusty.",
+    "fly": STRIP + "TWO frames of the same small cartoon housefly seen from the side, flying to the right: dark round body, big red-brown eyes, thin legs, translucent veined wings. LEFT: wings raised up. RIGHT: wings pushed down.",
+    "stink": STRIP + "THREE separate wavy curls of cartoon stink smell, each a tall vertical squiggly ribbon of sickly yellow-green vapour with a darker green ink outline, slightly different shapes, like a 1930s cartoon smell line.",
+    "drop": "A single clear water droplet, teardrop shape pointing up, pale blue with a bright white highlight and a thin dark ink outline.",
     "shelf": "A long wooden wall shelf seen EXACTLY from the front, perfectly straight and level, NO perspective, top surface not visible: a thick horizontal board about eight times longer than tall, with two carved wooden support brackets underneath near its ends, mirror-symmetric.",
 }
-ASPECT = {"flames": "16:9", "fan": "16:9", "sponge": "16:9", "scale": "16:9", "tray": "16:9", "board": "16:9",
+ASPECT = {"rope": "16:9", "fly": "16:9", "stink": "16:9", "flames": "16:9", "fan": "16:9", "sponge": "16:9", "scale": "16:9", "tray": "16:9", "board": "16:9",
           "plank": "16:9", "shelf": "16:9", "sieve": "16:9", "pan": "16:9"}
 
 

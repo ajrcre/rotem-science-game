@@ -20,8 +20,10 @@ STRIPS = {
     "fan": ["fan", "fan_blades"],
     "sponge": ["sponge", "sponge_wet"],
     "scale": ["scale_post", "scale_beam"],
+    "fly": ["fly_1", "fly_2"],
+    "stink": ["stink_1", "stink_2", "stink_3"],
 }
-SINGLES = ["candle", "icepack", "tray", "board", "metal", "cotton", "feather", "sieve", "pan", "bucket", "plank", "pulley", "shelf"]
+SINGLES = ["candle", "icepack", "tray", "board", "metal", "cotton", "feather", "sieve", "pan", "bucket", "plank", "pulley", "shelf", "rope", "hinge", "drop"]
 
 
 def largest_blob(src: Path, out: Path) -> None:

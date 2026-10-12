@@ -213,3 +213,12 @@ class Simulator {
 // The scene before the lever is pulled (the scale already leans under whatever is on it).
 const machineAt = (level, placed) => new Simulator(level, placed).snapshot();
 const runMachine = (level, placed) => new Simulator(level, placed).run();
+
+// After a run in stage `stage` (0-based): a win, a discovery that opens the next stage (not counted as a
+// mistake), or a mistake to explain.
+function judgeRun(level, stage, outcome) {
+  if (outcome === "win") return { kind: "win", stage };
+  const st = level.stages[stage];
+  if (st.discover === outcome && stage + 1 < level.stages.length) return { kind: "discover", stage: stage + 1 };
+  return { kind: "mistake", stage };
+}

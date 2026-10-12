@@ -601,8 +601,7 @@ body { font-family: var(--font-body); color: var(--ink); }
 .machine-scene { z-index: 2; overflow: visible; }
 .machine-scene .ink { stroke: var(--ink); stroke-width: 5; stroke-linejoin: round; stroke-linecap: round; }
 .machine-scene .thin { stroke: var(--ink); stroke-width: 3; stroke-linecap: round; }
-.machine-scene .rope { fill: none; stroke: #8a6a3c; stroke-width: 5; stroke-linecap: round; }
-.machine-scene .rope-ink { fill: none; stroke: var(--ink); stroke-width: 9; stroke-linecap: round; }
+.machine-scene .rope { fill: none; stroke: #c9a36a; stroke-width: 9; }
 
 /* Empty slots: a glowing dashed box with a question mark. Placed parts can be clicked back to the tray. */
 .slot-box rect { fill: rgba(255, 216, 74, .12); stroke: var(--glow); stroke-width: 4; stroke-dasharray: 14 10;
@@ -610,7 +609,7 @@ body { font-family: var(--font-body); color: var(--ink); }
 .slot-box text { font: 46px var(--font-title); fill: var(--glow); stroke: var(--ink); stroke-width: 2; paint-order: stroke;
   text-anchor: middle; dominant-baseline: central; }
 .slot-box { animation: slot-glow 1.6s ease-in-out infinite; }
-.slot-box.filled { display: none; }
+.slot-box.filled, .slot-box.off { display: none; }
 .machine.running .slot-box { display: none; }
 .slot-part { cursor: pointer; }
 .slot-part:hover { filter: drop-shadow(0 0 8px var(--glow)); }
@@ -630,15 +629,19 @@ body { font-family: var(--font-body); color: var(--ink); }
 @keyframes flame-frame { 0% { opacity: 1; } 33.34%, 100% { opacity: 0; } }
 .out .flame-glow { opacity: 0; }
 .spin .blades { animation: spin .25s linear infinite; transform-box: fill-box; transform-origin: center; }
-.stink path { fill: none; stroke: #a8cf4a; stroke-width: 7; stroke-linecap: round; opacity: 0;
-  animation: stink 2.6s ease-in infinite; }
-.stink path:nth-child(2) { animation-delay: .85s; }
-.stink path:nth-child(3) { animation-delay: 1.7s; }
+/* Painted stink wisps rise and fade one after another; the flies circle with flapping wings. */
+.stink image { opacity: 0; animation: stink 2.6s ease-in infinite; }
+.stink image:nth-child(2) { animation-delay: .85s; }
+.stink image:nth-child(3) { animation-delay: 1.7s; }
+.fly-frame { animation: flap .12s steps(1) infinite; }
+.fly-frame.w2 { animation-delay: -.06s; }
+@keyframes flap { 0% { opacity: 1; } 50%, 100% { opacity: 0; } }
 .fly { animation: spin 1.4s linear infinite; }
 .fly.b { animation-duration: 1.9s; animation-direction: reverse; }
 
 /* The rat's frames share one padded canvas (tools: PoseAligner); the body is 250px wide inside it. */
-.machine-rat { left: 952px; top: 138px; width: 255px; height: 187px; z-index: 4; }
+/* The paws are 12% above the frame's bottom (the tail hangs lower), so the box sits that much lower. */
+.machine-rat { left: 952px; top: 158px; width: 255px; height: 187px; z-index: 4; }
 .machine-rat .flip { position: absolute; inset: 0; transform: scaleX(-1); }
 .machine-rat .rig { transform-origin: 50% 100%; }
 .burp { position: absolute; z-index: 5; display: none; font: 34px var(--font-title); color: var(--ink);
@@ -678,3 +681,17 @@ body { font-family: var(--font-body); color: var(--ink); }
 @keyframes glow { from { opacity: .55; } to { opacity: .9; } }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes stink { 0% { opacity: 0; transform: translateY(0); } 25% { opacity: .9; } 100% { opacity: 0; transform: translateY(-70px); } }
+
+/* Choosing how to play: with the professor's hints, or without. */
+.machine-mode { position: absolute; inset: 0; z-index: 21; display: none; place-items: center;
+  background: radial-gradient(circle, rgba(255,226,140,.25), rgba(20,12,6,.8)); }
+.machine-mode.show { display: grid; }
+.mode-card { position: relative; width: 760px; padding: 80px 50px 46px; background: var(--paper); text-align: center;
+  border: 6px solid var(--ink); border-radius: 30px; box-shadow: 0 0 0 6px var(--brass), 0 0 0 12px var(--ink), 0 20px 0 10px rgba(0,0,0,.4);
+  animation: pop .5s cubic-bezier(.3,1.6,.5,1); }
+.mode-buttons { display: flex; gap: 30px; justify-content: center; }
+.mode-btn { display: flex; flex-direction: column; gap: 6px; padding: 18px 34px; min-width: 300px; }
+.mode-btn strong { font: 38px var(--font-title); font-weight: 400; }
+.mode-btn small { font: 500 21px var(--font-body); text-shadow: none; }
+.mode-btn.mode-plain { background: var(--brass); }
+.machine-bubble.hide { display: none; }

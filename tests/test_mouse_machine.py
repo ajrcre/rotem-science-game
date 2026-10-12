@@ -123,3 +123,58 @@ def test_the_deck_matches_the_parts_and_slots(machine):
     level, parts = machine["level"], machine["parts"]
     assert sorted(level["deck"]) == sorted(parts)
     assert {p["slot"] for p in parts.values()} == set(level["slots"])
+
+
+# ---------- Steps: one slot at a time ----------
+JUDGE = """
+const vm = require('vm'); const fs = require('fs'); const ctx = {};
+const src = process.argv.slice(1).map((f) => fs.readFileSync(f, 'utf8')).join(';\\n');
+vm.runInNewContext(src + ';this.api = {runMachine, judgeRun, MOUSE_LEVELS, MOUSE_MODES};', ctx);
+const {runMachine, judgeRun, MOUSE_LEVELS, MOUSE_MODES} = ctx.api;
+const level = MOUSE_LEVELS[0];
+// Play the intended path: each step fills its slot, earlier answers stay.
+const path = [{heat: "candle"}, {guard: "tray"}, {weight: "metal"}];
+let placed = {heat: null, guard: null, weight: null}, stage = 0; const steps = [];
+for (const add of path) {
+  Object.assign(placed, add);
+  const outcome = runMachine(level, placed).outcome;
+  const j = judgeRun(level, stage, outcome);
+  steps.push({stage, outcome, kind: j.kind, next: j.stage});
+  stage = j.stage;
+}
+const wrong = [
+  judgeRun(level, 0, "fan"), judgeRun(level, 1, "blocked"), judgeRun(level, 1, "soaked"),
+  judgeRun(level, 2, "cotton"), judgeRun(level, 2, "no_weight"),
+];
+process.stdout.write(JSON.stringify({steps, wrong, level, modes: Object.keys(MOUSE_MODES)}));
+"""
+
+
+@pytest.fixture(scope="module")
+def judged() -> dict:
+    files = [GAME / "mouse_levels.js", GAME / "machine_sim.js"]
+    out = subprocess.run(["node", "-e", JUDGE, *map(str, files)], check=True, capture_output=True, text=True)
+    return json.loads(out.stdout)
+
+
+@needs_node
+def test_the_steps_open_one_slot_at_a_time(judged):
+    assert [s["kind"] for s in judged["steps"]] == ["discover", "discover", "win"]
+    assert [s["outcome"] for s in judged["steps"]] == ["doused", "no_weight", "win"]
+    assert [s["next"] for s in judged["steps"]] == [1, 2, 2]
+    assert [st["slot"] for st in judged["level"]["stages"]] == judged["level"]["slots"]
+
+
+@needs_node
+def test_wrong_items_are_mistakes_not_discoveries(judged):
+    assert all(j["kind"] == "mistake" for j in judged["wrong"])
+    # Once the weight slot is open, an empty pan is a mistake, not a new step.
+    assert judged["wrong"][-1]["stage"] == 2
+
+
+@needs_node
+def test_every_line_has_both_modes(judged):
+    level, modes = judged["level"], judged["modes"]
+    assert sorted(modes) == ["hints", "plain"]
+    for line in [*level["outcomes"].values(), *(st["intro"] for st in level["stages"])]:
+        assert all(line[m] for m in modes)

@@ -71,6 +71,8 @@ const ART_DEFS = `
 // ---------- Effects canvas: drops, splashes, smoke, crumbs, dust ----------
 // Every particle is a small object with its own step/draw (a light Strategy per kind).
 class MachineFX {
+  static dropSprite = Object.assign(new Image(), { src: `${MACHINE_ART}parts/drop.webp` });
+
   constructor(canvas) {
     this.ctx = canvas.getContext("2d");
     this.items = [];
@@ -128,7 +130,7 @@ class MachineFX {
   }
 
   draw_drop(ctx, p) {
-    const blue = "rgba(140, 200, 245, .95)";
+    const sprite = MachineFX.dropSprite;
     let { x, y } = p;
     let stretch = 1, size = 5;
     if (p.age < p.swell) {
@@ -139,20 +141,12 @@ class MachineFX {
       stretch = 1 + 0.5 * u;
       if (u >= 1) { p.onLand?.(x, p.toY); return false; }
     }
+    // The painted drop (pointing up, like a falling drop's tail), stretched as it speeds up.
+    const h = size * 3.2, w = h * 0.67;
     ctx.save();
     ctx.translate(x, y);
     ctx.scale(1, stretch);
-    ctx.beginPath();
-    ctx.moveTo(0, -size * 1.6);
-    ctx.bezierCurveTo(size, -size * 0.4, size, size, 0, size);
-    ctx.bezierCurveTo(-size, size, -size, -size * 0.4, 0, -size * 1.6);
-    ctx.fillStyle = blue;
-    ctx.strokeStyle = "rgba(28, 20, 16, .8)";
-    ctx.lineWidth = 1.5;
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = "rgba(255,255,255,.85)";
-    ctx.fillRect(-size * 0.35, -size * 0.2, size * 0.3, size * 0.5);
+    if (sprite.complete && sprite.naturalWidth) ctx.drawImage(sprite, -w / 2, -h * 0.62, w, h);
     ctx.restore();
   }
 
@@ -228,8 +222,7 @@ class MachineView {
     const s = this.svg;
     s.innerHTML = `<defs>${ART_DEFS}
       <clipPath id="m-bucket-clip"><path d="M${G.bucket.x - 44} ${G.floor - 92} L${G.bucket.x + 44} ${G.floor - 92} L${G.bucket.x + 38} ${G.floor - 8} L${G.bucket.x - 38} ${G.floor - 8} Z"/></clipPath>
-      <clipPath id="m-sieve-back"><rect x="-90" y="-40" width="180" height="40"/></clipPath>
-      <clipPath id="m-sieve-front"><rect x="-90" y="0" width="180" height="90"/></clipPath>
+
     </defs>`;
 
     // Shelves: the cheese on the left, the rat on the right.
@@ -247,16 +240,16 @@ class MachineView {
                                     preserveAspectRatio: "xMidYMax meet" }, s);
     this.cheese = cheese;
     const stink = svgEl("g", { class: "stink" }, s);
-    for (const f of [0.3, 0.55, 0.8]) {
-      const x = c.x + f * c.w, y = G.ledgeY - c.h + 10;
-      svgEl("path", { d: `M${x} ${y} c-12 -12 12 -18 0 -30 c-12 -12 12 -18 0 -30` }, stink);
-    }
+    [0.3, 0.55, 0.8].forEach((f, i) => {
+      const x = c.x + f * c.w, y = G.ledgeY - c.h + 14;
+      stink.insertAdjacentHTML("beforeend", partImg(`stink_${i + 1}`, x - 14, y - 84, 28, 84, { align: "xMidYMax" }));
+    });
     this.stink = stink;
     for (const [fx, fy, cls] of [[c.x + 0.45 * c.w, G.ledgeY - c.h - 50, "fly"], [c.x + 0.75 * c.w, G.ledgeY - c.h - 25, "fly b"]]) {
       const at = svgEl("g", { transform: `translate(${fx} ${fy})` }, s);
       const fly = svgEl("g", { class: cls }, at);
-      svgEl("circle", { cx: 26, cy: 0, r: 4, fill: "#1c1410" }, fly);
-      svgEl("ellipse", { cx: 24, cy: -6, rx: 5, ry: 3, fill: "rgba(255,255,255,.75)", stroke: "#1c1410", "stroke-width": 1 }, fly);
+      fly.insertAdjacentHTML("beforeend", [1, 2].map((i) =>
+        partImg(`fly_${i}`, 16, -17, 34, 34, { cls: `fly-frame w${i}`, align: "xMidYMid" })).join(""));
     }
 
     // The bucket the tray pours into, with its water level.
@@ -277,15 +270,13 @@ class MachineView {
     const beamW = 2 * G.ropeArm + 30;
     this.beam.insertAdjacentHTML("beforeend", partImg("scale_beam", pv.x - beamW / 2, pv.y - 22, beamW, 46, { fit: "none" }));
 
-    // Left pan: a sieve with the ice in it (the ice is drawn first, so the sieve's rim covers its bottom).
+    // Left pan: the sieve, with the ice sitting in it (drawn on top).
     this.leftPan = svgEl("g", {}, s);
-    const sieve = (clip) => `<g clip-path="url(#${clip})">${partImg("sieve", -78, -14, 156, 75, { fit: "none" })}</g>`;
-    this.leftPan.insertAdjacentHTML("beforeend", sieve("m-sieve-back"));
+    this.leftPan.insertAdjacentHTML("beforeend", partImg("sieve", -78, -14, 156, 75, { fit: "none" }));
     this.puddle = svgEl("ellipse", { cx: 0, cy: 22, rx: 52, ry: 6, fill: "#9fd6f2", opacity: 0 }, this.leftPan);
     this.glow = svgEl("ellipse", { cx: 0, cy: -40, rx: 80, ry: 70, fill: "url(#m-flame-glow)", opacity: 0 }, this.leftPan);
     // Four painted melt stages, stacked; apply() cross-fades them by how much ice is left.
     this.ice = [0, 1, 2, 3].map((i) => svgEl("image", { href: `${MACHINE_ART}ice_${i}.webp`, preserveAspectRatio: "xMidYMax meet" }, this.leftPan));
-    this.leftPan.insertAdjacentHTML("beforeend", sieve("m-sieve-front"));
 
     // Right pan, with the weight slot riding on it.
     this.rightPan = svgEl("g", {}, s);
@@ -293,14 +284,17 @@ class MachineView {
     this.weightHolder = svgEl("g", { transform: `translate(0 ${G.panFloor})` }, this.rightPan);
 
     // Rope: bridge tip → over the pulley → down to the beam's left end.
-    this.ropeInk = svgEl("path", { class: "rope-ink" }, s);
-    this.rope = svgEl("path", { class: "rope" }, s);
+    this.svg.querySelector("defs").insertAdjacentHTML("beforeend",
+      `<pattern id="m-rope" patternUnits="userSpaceOnUse" width="27" height="10" y="-5">
+         <image href="${PARTS_ART}rope.webp" width="27" height="10" preserveAspectRatio="none"/></pattern>`);
+    this.ropeArc = svgEl("path", { class: "rope" }, s);
+    this.ropeSpans = [0, 1].map(() => svgEl("rect", { y: -5, height: 10, fill: "url(#m-rope)" }, s));
     s.insertAdjacentHTML("beforeend", partImg("pulley", p.x - 0.5 * 40, p.y - 0.6 * 53, 40, 53));
 
     // The drawbridge, hinged at the cheese shelf.
     this.bridge = svgEl("g", {}, s);
     this.bridge.insertAdjacentHTML("beforeend", partImg("plank", G.hinge.x - 6, G.hinge.y - 13, G.bridgeLen + 12, 26, { fit: "none" }));
-    svgEl("circle", { cx: G.hinge.x, cy: G.hinge.y, r: 9, fill: "#5c6a73", class: "ink" }, s);
+    s.insertAdjacentHTML("beforeend", partImg("hinge", G.hinge.x - 14, G.hinge.y - 14, 28, 28, { align: "xMidYMid" }));
 
     // Slots: the parts' holders, and a glowing "?" box while empty.
     for (const slot of ["heat", "guard", "weight"]) {
@@ -311,6 +305,15 @@ class MachineView {
       svgEl("rect", { x: r.x, y: r.y, width: r.w, height: r.h, rx: 14 }, box);
       svgEl("text", { x: r.x + r.w / 2, y: r.y + r.h / 2 }, box).textContent = "?";
       this.boxes[slot] = box;
+    }
+  }
+
+  // Only the slots opened so far are on the machine; a newly opened one pops in.
+  showSlots(open) {
+    for (const [slot, box] of Object.entries(this.boxes)) {
+      const was = !box.classList.contains("off");
+      box.classList.toggle("off", !open.includes(slot));
+      if (!was && open.includes(slot)) restart(box, "part-pop");
     }
   }
 
@@ -366,9 +369,15 @@ class MachineView {
     this.bridge.setAttribute("transform", `rotate(${(-state.bridge).toFixed(2)} ${G.hinge.x} ${G.hinge.y})`);
     const tip = { x: G.hinge.x + G.bridgeLen * Math.cos(a), y: G.hinge.y - G.bridgeLen * Math.sin(a) - 9 };
     const p = G.pulley;
-    const rope = `M${tip.x.toFixed(1)} ${tip.y.toFixed(1)} L${p.x + p.r} ${p.y} A${p.r} ${p.r} 0 0 0 ${p.x - p.r} ${p.y} L${hook.x.toFixed(1)} ${hook.y.toFixed(1)}`;
-    this.rope.setAttribute("d", rope);
-    this.ropeInk.setAttribute("d", rope);
+    // Two straight spans of painted rope (bridge tip → pulley, pulley → beam hook) and the bend over the wheel.
+    [[tip, { x: p.x + p.r, y: p.y }], [{ x: p.x - p.r, y: p.y }, hook]].forEach(([from, to], i) => {
+      const len = Math.hypot(to.x - from.x, to.y - from.y);
+      const deg = (Math.atan2(to.y - from.y, to.x - from.x) * 180) / Math.PI;
+      const span = this.ropeSpans[i];
+      span.setAttribute("width", len.toFixed(1));
+      span.setAttribute("transform", `translate(${from.x.toFixed(1)} ${from.y.toFixed(1)}) rotate(${deg.toFixed(2)})`);
+    });
+    this.ropeArc.setAttribute("d", `M${p.x + p.r} ${p.y} A${p.r} ${p.r} 0 0 0 ${p.x - p.r} ${p.y}`);
 
     // Ice: shrinks and rounds off as it melts, glows while it is heated.
     const frac = state.ice / level.iceMass;
@@ -378,7 +387,7 @@ class MachineView {
     this.ice.forEach((img, i) => {
       const o = frac > 0.002 ? Math.max(0, 1 - Math.abs(stage - i)) : 0;
       img.setAttribute("opacity", o.toFixed(2));
-      Object.entries({ x: -size / 2, y: 30 - size, width: size, height: size }).forEach(([k, v]) => img.setAttribute(k, v.toFixed(1)));
+      Object.entries({ x: -size / 2, y: 26 - size, width: size, height: size }).forEach(([k, v]) => img.setAttribute(k, v.toFixed(1)));
     });
     this.iceTop = this.pans.left.y + 30 - size * 0.85;
     this.iceSide = side;
@@ -451,19 +460,50 @@ class MachineGame {
     $("btn-machine-lab").addEventListener("click", () => Screens.go("lab"));
     $("btn-machine-back").addEventListener("click", () => Screens.go("lab"));
     $("btn-machine-replay").addEventListener("click", () => this.restartLevel());
+    $("btn-machine-mode").addEventListener("click", () => this.start(this.level));
   }
 
   async restartLevel() {
     await Film.iris(true);
-    this.start(this.level);
+    $("machine-victory").classList.remove("show");
+    this.begin(this.level, this.mode);
     await Film.iris(false);
   }
 
+  // Entering the game: pick a mode, then play.
   start(level = MOUSE_LEVELS[0]) {
+    this.stop();
+    this.professor.reset();
+    $("machine-victory").classList.remove("show");
+    // Behind the question, the machine as it starts: only the first slot, no cards yet.
+    Object.assign(this, { level, stage: 0, placed: Object.fromEntries(level.slots.map((s) => [s, null])) });
+    for (const slot of level.slots) this.view.setPart(slot, null);
+    this.view.showSlots(this.openSlots());
+    this.view.resetCheese();
+    this.resetRat();
+    this.showIdle();
+    $("machine-cards").innerHTML = "";
+    this.lever.reset();
+    $("machine-bubble").classList.add("hide");
+    const box = $("machine-mode-buttons");
+    box.replaceChildren(...Object.entries(MOUSE_MODES).map(([mode, m]) => {
+      const btn = el("button", `btn mode-btn mode-${mode}`);
+      btn.type = "button";
+      btn.append(el("strong", "", m.label), el("small", "", m.note));
+      btn.addEventListener("click", () => { $("machine-mode").classList.remove("show"); this.begin(level, mode); });
+      return btn;
+    }));
+    $("machine-mode").classList.add("show");
+  }
+
+  begin(level, mode) {
     this.level = level;
+    this.mode = mode;
     this.run += 1;
     this.placed = Object.fromEntries(level.slots.map((s) => [s, null]));
+    this.stage = 0;
     this.fails = 0;
+    this.stageFails = 0;
     this.running = false;
     $("machine").classList.remove("running");
     $("machine-victory").classList.remove("show");
@@ -477,13 +517,19 @@ class MachineGame {
     this.resetRat();
     this.ratIdle();
     this.renderCards();
+    this.view.showSlots(this.openSlots());
     this.showIdle();
     this.lever.reset();
     this.lever.show();
     this.professor.reset();
-    this.say(level.intro);
+    this.say(this.line(level.stages[0].intro));
     this.loop();
   }
+
+  // A line in the chosen mode ({ hints, plain }).
+  line(text) { return text[this.mode]; }
+
+  openSlots() { return this.level.stages.slice(0, this.stage + 1).map((st) => st.slot); }
 
   stop() {
     this.run += 1;
@@ -532,31 +578,26 @@ class MachineGame {
     const wrap = $("machine-cards");
     wrap.innerHTML = "";
     this.cards = {};
-    const groups = { heat: "מתחת לקרח", guard: "בין החום לקרח", weight: "על הכף" };
-    for (const slot of this.level.slots) {
-      const group = el("div", "card-group");
-      const row = el("div", "row");
-      group.append(el("small", "", groups[slot]), row);
-      for (const key of this.level.deck.filter((k) => PARTS[k].slot === slot)) {
-        const btn = el("button", "card");
-        btn.type = "button";
-        btn.dataset.key = key;
-        btn.innerHTML = `<svg viewBox="0 0 120 120"><defs>${ART_DEFS.replaceAll('id="m-', `id="c-${key}-`)}</defs>${PART_ART[key]().replaceAll("url(#m-", `url(#c-${key}-`)}</svg><span>${PARTS[key].label}</span>`;
-        btn.addEventListener("click", () => this.pick(key));
-        this.cards[key] = btn;
-        row.append(btn);
-      }
-      wrap.append(group);
+    const slot = this.level.stages[this.stage].slot;
+    for (const key of this.level.deck.filter((k) => PARTS[k].slot === slot)) {
+      const btn = el("button", "card");
+      btn.type = "button";
+      btn.dataset.key = key;
+      btn.innerHTML = `<svg viewBox="0 0 120 120"><defs>${ART_DEFS.replaceAll('id="m-', `id="c-${key}-`)}</defs>${PART_ART[key]().replaceAll("url(#m-", `url(#c-${key}-`)}</svg><span>${PARTS[key].label}</span>`;
+      btn.addEventListener("click", () => this.pick(key));
+      if (this.placed[slot] === key) btn.classList.add("used");
+      this.cards[key] = btn;
+      wrap.append(btn);
     }
   }
 
   // A card flies to its slot (whatever was there goes back to the tray). Clicking a placed card takes it back.
   async pick(key) {
-    if (this.running) return;
     const slot = PARTS[key].slot;
+    if (this.running || slot !== this.level.stages[this.stage].slot) return;
     if (this.placed[slot] === key) return this.remove(slot);
     Sfx.play("click");
-    if (this.placed[slot]) this.cards[this.placed[slot]].classList.remove("used");
+    if (this.placed[slot]) this.cards[this.placed[slot]]?.classList.remove("used");
     this.placed[slot] = key;
     this.cards[key].classList.add("used");
     const run = this.run;
@@ -564,13 +605,14 @@ class MachineGame {
     if (run !== this.run || this.placed[slot] !== key) return;
     this.view.setPart(slot, key);
     this.showIdle(false);
-    this.say(PARTS[key].fact);
+    if (this.mode === "hints") this.say(PARTS[key].fact);
   }
 
   remove(slot) {
-    if (this.running || !this.placed[slot]) return;
+    // Only the open step's part can go back: the earlier steps are solved and stay in place.
+    if (this.running || !this.placed[slot] || slot !== this.level.stages[this.stage].slot) return;
     Sfx.play("click", { rate: 0.8 });
-    this.cards[this.placed[slot]].classList.remove("used");
+    this.cards[this.placed[slot]]?.classList.remove("used");
     this.placed[slot] = null;
     this.view.setPart(slot, null);
     this.showIdle(false);
@@ -650,7 +692,9 @@ class MachineGame {
     await this.replay(result);
     this.view.parts.heat.classList.remove("spin");
     if (run !== this.run) return;
-    if (result.outcome === "win") await this.win();
+    const judged = judgeRun(this.level, this.stage, result.outcome);
+    if (judged.kind === "win") await this.win();
+    else if (judged.kind === "discover") await this.discover(judged.stage);
     else await this.fail(result.outcome);
   }
 
@@ -730,18 +774,39 @@ class MachineGame {
     }
   }
 
+  // The run taught something: the professor says what happened, and the next step's slot opens. No star lost.
+  async discover(stage) {
+    const run = this.run;
+    this.professor.play(["cheer", "talk", "idle"], { fps: 3, ms: 1500, react: "jump" });
+    const said = this.say(this.line(this.level.stages[stage].intro), "good");
+    await wait(1600);
+    if (run !== this.run) return;
+    this.stage = stage;
+    this.stageFails = 0;
+    this.resetMachine();
+    this.renderCards();
+    this.view.showSlots(this.openSlots());
+    await said;
+  }
+
   async fail(outcome) {
     const run = this.run;
     this.fails += 1;
+    this.stageFails += 1;
     this.updateStars();
     this.rat.play(["sad_1", "sad_1", "sad_2", "sad_2"], { fps: 2, ms: 2200, react: "droop" });
     this.professor.play(["worried"], { ms: 1600, react: "tremble" });
-    let line = this.level.outcomes[outcome];
-    if (this.fails >= 2) line += ` ${this.level.hint}`;
+    let line = this.line(this.level.outcomes[outcome]);
+    if (this.mode === "hints" && this.stageFails >= 2) line += ` ${this.level.stages[this.stage].hint}`;
     const said = this.say(line, "bad");
     await wait(1600);
     if (run !== this.run) return;
-    // Back to the start: the ice is whole again and the candle relit; the chosen parts stay.
+    this.resetMachine();
+    await said;
+  }
+
+  // Back to the start: the ice is whole again and the candle relit; the chosen parts stay.
+  resetMachine() {
     this.fx.smoke(G.pivot.x - G.arm, G.pivot.y + 20, 6, false);
     this.showIdle(true);
     this.running = false;
@@ -749,7 +814,6 @@ class MachineGame {
     for (const c of Object.values(this.cards)) c.disabled = false;
     this.lever.reset();
     this.lever.show();
-    await said;
   }
 
   async win() {
@@ -757,7 +821,7 @@ class MachineGame {
     const live = () => run === this.run;
     const ratEl = $("machine-rat");
     this.professor.play(["cheer", "talk", "cheer", "idle"], { fps: 3, ms: 1700, react: "jump" });
-    this.say(this.level.outcomes.win, "good");
+    this.say(this.line(this.level.outcomes.win), "good");
 
     // Sniff the air, then scurry over the bridge to the cheese.
     clearTimeout(this.idleTimer);
