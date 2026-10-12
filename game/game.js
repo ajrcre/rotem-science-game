@@ -285,9 +285,11 @@ class Lever {
   static DOWN = 62;
   static REACH = 200;                      // stage px of straight downward drag for a full pull
 
-  constructor(onGrab, onRelease, onPulled) {
-    this.el = $("lever");
-    this.handle = $("lever-handle");
+  // `root` is the .lever block: the workbench's by default, or another screen's copy of its markup.
+  constructor(onGrab, onRelease, onPulled, root = $("lever")) {
+    this.el = root;
+    this.handle = root.querySelector(".lever-handle");
+    this.guide = root.querySelector(".lever-guide");
     Object.assign(this, { onGrab, onRelease, onPulled });
     this.active = false;
     this.dragging = false;
@@ -304,13 +306,13 @@ class Lever {
     this.dragging = false;
     this.el.classList.remove("show");
     this.handle.classList.remove("spring");
-    $("lever-guide").hidden = true;
+    this.guide.hidden = true;
     this.set(Lever.UP);
   }
 
   show() {
     this.active = true;
-    $("lever-guide").hidden = false;
+    this.guide.hidden = false;
     this.handle.setAttribute("tabindex", "0");
     this.el.classList.add("show");
   }
@@ -337,7 +339,7 @@ class Lever {
     this.dragging = true;
     this.handle.classList.add("dragging");
     this.handle.classList.remove("spring");
-    $("lever-guide").hidden = true;
+    this.guide.hidden = true;
     this.startY = e.clientY;
     Sfx.play("click");
     this.onGrab();
@@ -361,7 +363,7 @@ class Lever {
     this.handle.classList.remove("dragging");
     this.handle.classList.add("spring");
     this.set(Lever.UP);
-    $("lever-guide").hidden = false;
+    this.guide.hidden = false;
     this.onRelease();
   }
 

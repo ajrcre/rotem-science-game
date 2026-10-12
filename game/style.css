@@ -490,7 +490,7 @@ body { font-family: var(--font-body); color: var(--ink); }
 .splash-enter:focus-visible { outline: 5px dashed var(--glow); outline-offset: 6px; }
 
 /* The workbench's animated, filtered actors are covered by these screens: don't paint them. */
-#stage:is([data-screen="splash"], [data-screen="lab"]) :is(#professor, #sparky, #alien) { visibility: hidden; }
+#stage:is([data-screen="splash"], [data-screen="lab"], [data-screen="chemistry"]) :is(#professor, #sparky, #alien) { visibility: hidden; }
 /* …and its painting isn't even downloaded until a game needs it (the page starts on the splash). */
 #stage:is([data-screen="splash"], [data-screen="lab"], [data-screen="credits"]) > .bg { display: none; }
 
@@ -589,3 +589,87 @@ body { font-family: var(--font-body); color: var(--ink); }
   border-bottom: 1px dashed rgba(233,226,208,.28); }
 @keyframes credit-in { 0% { opacity: 0; transform: scale(.94); } 18%, 80% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.02); } }
 @keyframes credit-in-end { 0% { opacity: 0; transform: scale(.6); } 25% { opacity: 1; transform: scale(1.05); } 40%, 100% { opacity: 1; transform: scale(1); } }
+
+/* ---------- The rat and the cheese (Chemistry corner) ---------- */
+/* One SVG scene (machine.js draws and moves it), a canvas on top for water drops, smoke and crumbs. */
+.machine { position: absolute; inset: 0; z-index: 44; display: none; background: #2a1d14; }
+.machine.show { display: block; }
+.machine-bg { position: absolute; inset: 0; background: url("../assets/web/lab_bg.webp") center / cover;
+  filter: sepia(.45) saturate(.7) brightness(.42) blur(1.5px); transform: scale(1.02); }
+.machine-scene, .machine-fx { position: absolute; inset: 0; width: 1600px; height: 900px; }
+.machine-fx { pointer-events: none; z-index: 3; }
+.machine-scene { z-index: 2; overflow: visible; }
+.machine-scene .ink { stroke: var(--ink); stroke-width: 5; stroke-linejoin: round; stroke-linecap: round; }
+.machine-scene .thin { stroke: var(--ink); stroke-width: 3; stroke-linecap: round; }
+.machine-scene .rope { fill: none; stroke: #8a6a3c; stroke-width: 5; stroke-linecap: round; }
+.machine-scene .rope-ink { fill: none; stroke: var(--ink); stroke-width: 9; stroke-linecap: round; }
+
+/* Empty slots: a glowing dashed box with a question mark. Placed parts can be clicked back to the tray. */
+.slot-box rect { fill: rgba(255, 216, 74, .12); stroke: var(--glow); stroke-width: 4; stroke-dasharray: 14 10;
+  animation: march .9s linear infinite; }
+.slot-box text { font: 46px var(--font-title); fill: var(--glow); stroke: var(--ink); stroke-width: 2; paint-order: stroke;
+  text-anchor: middle; dominant-baseline: central; }
+.slot-box { animation: slot-glow 1.6s ease-in-out infinite; }
+.slot-box.filled { display: none; }
+.machine.running .slot-box { display: none; }
+.slot-part { cursor: pointer; }
+.slot-part:hover { filter: drop-shadow(0 0 8px var(--glow)); }
+.machine.running .slot-part { cursor: default; filter: none; }
+.part-pop { animation: part-pop .45s cubic-bezier(.3,1.8,.5,1); transform-box: fill-box; transform-origin: 50% 100%; }
+
+/* Candle flame: a flicker that never repeats exactly (two animations with different lengths). */
+.flame { transform-box: fill-box; transform-origin: 50% 100%;
+  animation: flame-a .53s ease-in-out infinite alternate, flame-b 1.37s ease-in-out infinite alternate;
+  transition: opacity .25s, scale .3s; }
+.flame-glow { animation: glow 1.1s ease-in-out infinite alternate; transition: opacity .3s; }
+.out .flame { opacity: 0; scale: .1 .1; }
+.out .flame-glow { opacity: 0; }
+.spin .blades { animation: spin .25s linear infinite; transform-box: fill-box; transform-origin: center; }
+.stink path { fill: none; stroke: #a8cf4a; stroke-width: 7; stroke-linecap: round; opacity: 0;
+  animation: stink 2.6s ease-in infinite; }
+.stink path:nth-child(2) { animation-delay: .85s; }
+.stink path:nth-child(3) { animation-delay: 1.7s; }
+.fly { animation: spin 1.4s linear infinite; }
+.fly.b { animation-duration: 1.9s; animation-direction: reverse; }
+
+.machine-rat { left: 1010px; top: 150px; width: 250px; height: 172px; z-index: 4; }
+.machine-rat .flip { position: absolute; inset: 0; transform: scaleX(-1); }
+.machine-rat img { opacity: 1; }
+.machine-rat .rig { transform-origin: 50% 100%; }
+.burp { position: absolute; z-index: 5; display: none; font: 34px var(--font-title); color: var(--ink);
+  background: #fffaf0; border: 4px solid var(--ink); border-radius: 50%; padding: 8px 20px; }
+.burp.show { display: block; animation: pop .4s cubic-bezier(.3,1.8,.5,1); }
+
+.machine-title { left: 90px; transform: none; top: 14px; padding: 6px 26px; z-index: 6; }
+.machine-title .title-text strong { font-size: 36px; }
+.machine-lab-btn { right: 30px; top: 26px; }
+.machine-professor { left: -40px; bottom: 205px; width: 300px; height: 427px; z-index: 5; }
+.machine-bubble { left: 790px; right: auto; top: 14px; bottom: auto; width: 600px; min-height: 96px; z-index: 7; }
+.machine-bubble::after { right: auto; left: -34px; bottom: 26px; border-left: 5px solid var(--ink); border-right: none;
+  transform: skewY(28deg); border-radius: 0 0 0 22px; }
+.machine-bubble p { font-size: 24px; }
+.machine-lever { left: 1190px; z-index: 8; }
+.machine-lever.show { transform: translateY(0); }
+
+.machine-tray { z-index: 6; }
+.machine-cards { display: flex; justify-content: center; align-items: flex-start; gap: 22px; padding: 22px 430px 0 30px; }
+.card-group { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.card-group small { font: 18px var(--font-title); color: var(--paper); text-shadow: 2px 2px 0 var(--ink); }
+.card-group .row { display: flex; gap: 10px; }
+.machine-cards .card { width: 108px; height: 142px; padding: 8px 4px 6px; font-size: 18px; line-height: 1.05; text-align: center; }
+.machine-cards .card svg { width: 88px; height: 88px; pointer-events: none; overflow: visible; }
+.machine-cards .card.used { visibility: visible; opacity: .35; transform: none; }
+.machine-cards .card:disabled { cursor: default; }
+.machine.running .machine-cards .card:hover { transform: none; }
+.flyer-svg { position: absolute; z-index: 30; pointer-events: none; transition: all .5s cubic-bezier(.5,-0.3,.6,1.3); }
+.flyer-svg svg { width: 100%; height: 100%; overflow: visible; }
+
+.machine-victory { z-index: 20; }
+
+@keyframes slot-glow { 0%, 100% { opacity: .65; } 50% { opacity: 1; } }
+@keyframes part-pop { 0% { transform: scale(.3); } 100% { transform: scale(1); } }
+@keyframes flame-a { from { transform: scale(.92, 1.04) skewX(-4deg); } to { transform: scale(1.06, .94) skewX(5deg); } }
+@keyframes flame-b { from { translate: -1px 0; } to { translate: 1.5px -2px; } }
+@keyframes glow { from { opacity: .55; } to { opacity: .9; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes stink { 0% { opacity: 0; transform: translateY(0); } 25% { opacity: .9; } 100% { opacity: 0; transform: translateY(-70px); } }

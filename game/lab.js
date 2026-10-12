@@ -17,7 +17,7 @@ const LAB_LINES = {
 // The room is one painting (lab_hub.jpg); each station is a layer cut from it by tools/cut_lab_layers.py,
 // placed by assets/art/lab_hub_layers.json so it lines up exactly until it is hovered. `fx` picks the particles.
 const LAB_CORNERS = [
-  { id: "chemistry", label: "פינת הכימיה",         fx: "bubbles" },
+  { id: "chemistry", label: "פינת הכימיה",         fx: "bubbles", open: "chemistry", game: "העכברוש והגבינה" },
   { id: "energy",    label: "פינת האנרגיה",        fx: "sparks", open: "energy", game: "מגיני האנרגיה" },
   { id: "electric",  label: "פינת החשמל והמגנטים", fx: "zaps", signX: "66%" },   // clear of the professor
   { id: "space",     label: "פינת החלל",           fx: "stars" },
@@ -132,6 +132,12 @@ const Screens = {
       music: "lab",             // the level map; playLevel() stops it for the game itself
       enter() { LevelMap.show(); },
       leave() { game.stop(); WindowScene.hide(); LevelMap.hide(); $("victory").classList.remove("show"); $("quiz").classList.remove("show"); },
+    },
+    chemistry: {
+      music: "lab",             // sound for this game comes in its second phase
+      ready: () => loadImages([`${MACHINE_ART}rat.webp`, `${ART}lab_bg.webp`, frameSrc("professor", "idle")]),
+      enter() { $("machine").classList.add("show"); machineGame.start(); },
+      leave() { machineGame.stop(); $("machine").classList.remove("show"); },
     },
   },
 

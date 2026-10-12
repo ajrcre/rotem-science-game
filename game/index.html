@@ -193,6 +193,72 @@
       <div class="level-grid" id="level-grid"></div>
     </section>
 
+    <!-- The rat and the cheese (Chemistry corner): the scene is drawn by machine.js -->
+    <section class="machine" id="machine" aria-labelledby="machine-title">
+      <div class="machine-bg"></div>
+      <svg class="machine-scene" id="machine-scene" viewBox="0 0 1600 900" aria-hidden="true"></svg>
+      <canvas class="machine-fx" id="machine-fx" width="1600" height="900"></canvas>
+      <div class="actor machine-rat" id="machine-rat" role="img" aria-label="העכברוש"><div class="flip"><div class="rig"><img class="on" src="../assets/web/machine/rat.webp" alt=""></div></div></div>
+      <div class="burp" id="machine-burp">אוּפּ!</div>
+
+      <div class="title-card machine-title">
+        <div class="stars" id="machine-stars"><span>★</span><span>★</span><span>★</span></div>
+        <div class="title-text">
+          <small id="machine-level">שלב 1</small>
+          <strong id="machine-title">הגשר המורם</strong>
+        </div>
+      </div>
+      <button class="hud-btn machine-lab-btn" id="btn-machine-lab" type="button">→ למעבדה</button>
+
+      <div class="actor machine-professor" id="machine-professor" role="img" aria-label="פרופסור מדעני"><div class="rig boil"><img alt=""><img alt=""></div></div>
+      <div class="bubble machine-bubble" id="machine-bubble"><p id="machine-bubble-text"></p></div>
+
+      <div class="lever machine-lever" id="machine-lever">
+        <div class="lever-guide" aria-hidden="true">
+          <svg class="lever-arc" viewBox="0 0 400 470">
+            <path class="arc-ink" d="M 34 46 A 255 255 0 0 1 264 101"/>
+            <path class="arc-dash" d="M 34 46 A 255 255 0 0 1 264 101" marker-end="url(#arc-head)"/>
+          </svg>
+          <div class="lever-hint">משכו את הידית!</div>
+        </div>
+        <div class="lever-handle" role="button" aria-label="ידית – משכו כדי להפעיל את המכונה"><svg viewBox="0 0 120 300">
+          <defs>
+            <linearGradient id="m-rod" x1="0" x2="1">
+              <stop offset="0" stop-color="#8a5a24"/><stop offset=".35" stop-color="#f1c66e"/>
+              <stop offset=".7" stop-color="#c08a3e"/><stop offset="1" stop-color="#6e4519"/>
+            </linearGradient>
+            <radialGradient id="m-knob" cx=".35" cy=".3" r=".75">
+              <stop offset="0" stop-color="#ffb3a0"/><stop offset=".35" stop-color="#e2412f"/>
+              <stop offset="1" stop-color="#7d1810"/>
+            </radialGradient>
+          </defs>
+          <rect x="48" y="58" width="24" height="236" rx="10" fill="url(#m-rod)" stroke="#1c1410" stroke-width="6"/>
+          <circle cx="60" cy="52" r="46" fill="url(#m-knob)" stroke="#1c1410" stroke-width="7"/>
+          <ellipse cx="44" cy="34" rx="13" ry="8" fill="#fff" opacity=".8" transform="rotate(-30 44 34)"/>
+        </svg></div>
+        <img class="lever-base" src="../assets/web/lever_base.webp" alt="">
+      </div>
+
+      <div class="tray machine-tray">
+        <div class="tray-label">החפצים שלך</div>
+        <div class="machine-cards" id="machine-cards"></div>
+      </div>
+
+      <div class="victory machine-victory" id="machine-victory">
+        <div class="victory-card">
+          <div class="ribbon">העכברוש שבע!</div>
+          <div class="big-stars" id="machine-big-stars"></div>
+          <h3>מה למדנו:</h3>
+          <div class="summary" id="machine-summary"></div>
+          <p class="lesson" id="machine-lesson"></p>
+          <div class="buttons">
+            <button class="btn" id="btn-machine-replay" type="button">שחק שוב</button>
+            <button class="btn alt" id="btn-machine-back" type="button">למעבדה</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Lab hub: one corner per game (built by lab.js) -->
     <section class="lab" id="lab" aria-labelledby="lab-title">
       <div class="lab-bg"></div>
@@ -238,6 +304,9 @@
 <script src="fx.js"></script>
 <script src="sound.js"></script>
 <script src="game.js"></script>
+<script src="mouse_levels.js"></script>
+<script src="machine_sim.js"></script>
+<script src="machine.js"></script>
 <script src="lab.js"></script>
 </body>
 </html>
