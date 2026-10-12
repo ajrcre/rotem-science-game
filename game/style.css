@@ -632,9 +632,9 @@ body { font-family: var(--font-body); color: var(--ink); }
 .fly { animation: spin 1.4s linear infinite; }
 .fly.b { animation-duration: 1.9s; animation-direction: reverse; }
 
-.machine-rat { left: 1010px; top: 150px; width: 250px; height: 172px; z-index: 4; }
+/* The rat's frames share one padded canvas (tools: PoseAligner); the body is 250px wide inside it. */
+.machine-rat { left: 923px; top: 18px; width: 425px; height: 311px; z-index: 4; }
 .machine-rat .flip { position: absolute; inset: 0; transform: scaleX(-1); }
-.machine-rat img { opacity: 1; }
 .machine-rat .rig { transform-origin: 50% 100%; }
 .burp { position: absolute; z-index: 5; display: none; font: 34px var(--font-title); color: var(--ink);
   background: #fffaf0; border: 4px solid var(--ink); border-radius: 50%; padding: 8px 20px; }

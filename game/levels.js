@@ -33,6 +33,9 @@ const CARDS = {
 
 const CHARACTERS = {
   professor: { poses: ["idle", "talk", "cheer", "worried", "point", "hurry", "walk_a", "walk_b"], idle: "breathe" },
+  // The Chemistry corner's rat (game/machine.js).
+  rat: { poses: ["idle", "idle_2", "idle_3", "run_1", "run_2", "run_3", "run_4", "scared_1", "scared_2",
+                 "sad_1", "sad_2", "eat_1", "eat_2", "eat_3", "full_1", "full_2"], idle: "breathe" },
   sparky:    { poses: ["idle", "dance_a", "dance_b", "sad", "pull", "cheer"], idle: "bob" },
   alien:     { poses: ["idle", "laugh", "scared"], idle: "hover" },
   alien2:    { poses: ["idle", "laugh", "scared"], idle: "hover" },

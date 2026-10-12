@@ -35,8 +35,8 @@ const G = {
     guard:  { x: 570, y: 568, w: 196, h: 44, anchor: "center" },
     weight: { x: 855, y: 0, w: 112, h: 92, anchor: "pan" },          // follows the right pan
   },
-  rat: { x: 1010, y: 150, w: 250, h: 172 },
-  cheese: { x: 280, w: 150, h: 92 },
+  rat: { x: 923, body: 87, w: 250 },   // element left; the body starts `body` px into the frame canvas
+  cheese: { x: 250, w: 200, h: 152 },
 };
 
 // ---------- Part art (Factory): one drawing per part, used on the cards and in the scene ----------
@@ -257,8 +257,6 @@ class MachineView {
     const s = this.svg;
     s.innerHTML = `<defs>${ART_DEFS}
       <clipPath id="m-bucket-clip"><path d="M${G.bucket.x - 42} ${G.bucket.top} L${G.bucket.x + 42} ${G.bucket.top} L${G.bucket.x + 34} ${G.floor - 4} L${G.bucket.x - 34} ${G.floor - 4} Z"/></clipPath>
-      <mask id="m-bites"><rect x="0" y="0" width="1600" height="900" fill="#fff"/><g id="m-bite-holes" fill="#000"></g></mask>
-      <linearGradient id="m-ice" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eaf8ff"/><stop offset=".55" stop-color="#a9dcf5"/><stop offset="1" stop-color="#78bde3"/></linearGradient>
     </defs>`;
 
     // Shelves: the cheese on the left, the rat on the right.
@@ -275,14 +273,10 @@ class MachineView {
     const p = G.pulley;
     svgEl("rect", { x: p.x - 8, y: 0, width: 16, height: p.y - 6, fill: "#7a5222", class: "ink" }, s);
 
-    // Cheese with its stink, a couple of flies, and a mask the rat bites into.
+    // The painted cheese (one picture per bite stage), its stink and a couple of flies.
     const c = G.cheese;
-    const cheese = svgEl("g", { mask: "url(#m-bites)" }, s);
-    svgEl("path", { d: `M${c.x} ${G.ledgeY} L${c.x + c.w} ${G.ledgeY} L${c.x + c.w} ${G.ledgeY - c.h} Z`, fill: "#f2c94c", class: "ink" }, cheese);
-    svgEl("path", { d: `M${c.x + c.w} ${G.ledgeY} L${c.x + c.w + 34} ${G.ledgeY - 12} L${c.x + c.w + 34} ${G.ledgeY - c.h - 10} L${c.x + c.w} ${G.ledgeY - c.h} Z`, fill: "#e0ad2e", class: "ink" }, cheese);
-    for (const [hx, hy, r] of [[100, -22, 9], [126, -52, 7], [72, -12, 6], [134, -18, 6]]) {
-      svgEl("circle", { cx: c.x + hx, cy: G.ledgeY + hy, r, fill: "#d39b22", class: "thin" }, cheese);
-    }
+    const cheese = svgEl("image", { href: `${MACHINE_ART}cheese_0.webp`, x: c.x, y: G.ledgeY - c.h + 4, width: c.w, height: c.h,
+                                    preserveAspectRatio: "xMidYMax meet" }, s);
     this.cheese = cheese;
     const stink = svgEl("g", { class: "stink" }, s);
     for (const dx of [60, 105, 150]) {
@@ -319,8 +313,8 @@ class MachineView {
     this.leftPan = svgEl("g", {}, s);
     this.puddle = svgEl("ellipse", { cx: 0, cy: 6, rx: 50, ry: 5, fill: "#9fd6f2", opacity: 0 }, this.leftPan);
     this.glow = svgEl("ellipse", { cx: 0, cy: -40, rx: 80, ry: 70, fill: "url(#m-flame-glow)", opacity: 0 }, this.leftPan);
-    this.ice = svgEl("rect", { fill: "url(#m-ice)", class: "ink" }, this.leftPan);
-    this.iceShine = svgEl("path", { fill: "none", stroke: "#fff", "stroke-width": 6, "stroke-linecap": "round", opacity: 0.85 }, this.leftPan);
+    // Four painted melt stages, stacked; apply() cross-fades them by how much ice is left.
+    this.ice = [0, 1, 2, 3].map((i) => svgEl("image", { href: `${MACHINE_ART}ice_${i}.webp`, preserveAspectRatio: "xMidYMax meet" }, this.leftPan));
     svgEl("path", { d: "M-76 0 L76 0 C66 22 -66 22 -76 0 Z", fill: "#c3ccd1", class: "ink" }, this.leftPan);
     for (let i = -3; i <= 3; i++) svgEl("circle", { cx: i * 15, cy: 9 + (Math.abs(i) < 3 ? 2 : 0), r: 3, fill: "#1c1410" }, this.leftPan);
 
@@ -412,12 +406,13 @@ class MachineView {
     // Ice: shrinks and rounds off as it melts, glows while it is heated.
     const frac = state.ice / level.iceMass;
     const side = 96 * Math.sqrt(frac);
-    this.ice.setAttribute("display", frac > 0.002 ? "" : "none");
-    this.iceShine.setAttribute("display", frac > 0.05 ? "" : "none");
-    const round = 6 + 0.42 * side * (1 - frac) + (state.warm > 0 ? 4 : 0);
-    Object.entries({ x: -side / 2, y: 6 - side, width: side, height: side, rx: Math.min(round, side / 2) })
-      .forEach(([k, v]) => this.ice.setAttribute(k, v.toFixed(1)));
-    this.iceShine.setAttribute("d", `M${(-side * 0.3).toFixed(1)} ${(6 - side * 0.78).toFixed(1)} l${(side * 0.22).toFixed(1)} ${(-side * 0.06).toFixed(1)}`);
+    const stage = (1 - frac) * 3 * Math.min(1, state.warm * 4 + (frac < 1 ? 1 : 0));   // 0 = solid … 3 = sliver
+    const size = side * 1.3;                                // the paintings include a little puddle around the cube
+    this.ice.forEach((img, i) => {
+      const o = frac > 0.002 ? Math.max(0, 1 - Math.abs(stage - i)) : 0;
+      img.setAttribute("opacity", o.toFixed(2));
+      Object.entries({ x: -size / 2, y: 12 - size, width: size, height: size }).forEach(([k, v]) => img.setAttribute(k, v.toFixed(1)));
+    });
     this.iceTop = this.pans.left.y + 6 - side;
     this.iceSide = side;
     const melting = state.warm > 0 && state.lit && frac > 0;
@@ -451,15 +446,11 @@ class MachineView {
     return heat ? G.floor - (heat === "candle" ? 64 : 112) : G.floor - 4;
   }
 
-  bite(n) {
-    const c = G.cheese;
-    const holes = document.getElementById("m-bite-holes");
-    const at = [[c.x + c.w + 20, G.ledgeY - c.h + 2, 30], [c.x + c.w + 6, G.ledgeY - 40, 36], [c.x + c.w - 30, G.ledgeY - 30, 46]][n];
-    if (at) svgEl("circle", { cx: at[0], cy: at[1], r: at[2] }, holes);
-  }
+  // Bite n (0..2) shows the next painted stage: one bite, half eaten, almost gone.
+  bite(n) { this.cheese.setAttribute("href", `${MACHINE_ART}cheese_${Math.min(n + 1, 3)}.webp`); }
 
   resetCheese() {
-    document.getElementById("m-bite-holes").innerHTML = "";
+    this.cheese.setAttribute("href", `${MACHINE_ART}cheese_0.webp`);
     this.cheese.style.opacity = "";
     this.stink.style.display = "";
   }
@@ -484,7 +475,7 @@ class MachineGame {
     this.fx = new MachineFX($("machine-fx"));
     this.view = new MachineView($("machine-scene"), this.fx);
     this.professor = new Actor("professor", "machine-professor");
-    this.rat = new Rig($("machine-rat").querySelector(".rig"), "breathe");
+    this.rat = new Actor("rat", "machine-rat");
     this.lever = new Lever(() => {}, () => {}, () => this.pull(), $("machine-lever"));
     this.run = 0;
     this.view.svg.addEventListener("click", (e) => {
@@ -518,6 +509,7 @@ class MachineGame {
     this.view.resetCheese();
     this.fx.clear();
     this.resetRat();
+    this.ratIdle();
     this.renderCards();
     this.showIdle();
     this.lever.reset();
@@ -531,6 +523,7 @@ class MachineGame {
     this.run += 1;
     this.running = false;
     clearInterval(this.typeTimer);
+    clearTimeout(this.idleTimer);
     cancelAnimationFrame(this.raf);
     this.fx.clear();
   }
@@ -664,6 +657,20 @@ class MachineGame {
     this.rat.reset();
   }
 
+  // While nothing else is going on, the rat now and then blinks or sniffs toward the cheese.
+  ratIdle() {
+    clearTimeout(this.idleTimer);
+    const run = this.run;
+    this.idleTimer = setTimeout(() => {
+      if (run !== this.run) return;
+      if (this.rat.current === "idle" && !this.rat.timer) {
+        if (Math.random() < 0.5) this.rat.play(["idle_2"], { ms: 220 });
+        else this.rat.play(["idle_3", "idle", "idle_3"], { fps: 6, ms: 700, react: "jump" });
+      }
+      this.ratIdle();
+    }, rand(1800, 3800));
+  }
+
   // ---------- A run ----------
   async pull() {
     if (this.running) return;
@@ -730,7 +737,7 @@ class MachineGame {
     } else if (e.type === "doused") {
       v.fx.smoke(G.slots.heat.x, G.floor - 95, 7);
       v.fx.smoke(G.slots.heat.x, G.floor - 95, 3, false);
-      this.rat.tremble(900, 4);
+      this.rat.play(["scared_1", "scared_2"], { fps: 4, ms: 1300, react: "tremble" });
     } else if (e.type === "bridge_down") {
       v.fx.dust(G.ratLedge[0], G.ledgeY, 12);
       Film.quake();
@@ -761,7 +768,7 @@ class MachineGame {
     const run = this.run;
     this.fails += 1;
     this.updateStars();
-    this.rat.droop(1800);
+    this.rat.play(["sad_1", "sad_1", "sad_2", "sad_2"], { fps: 2, ms: 2200, react: "droop" });
     this.professor.play(["worried"], { ms: 1600, react: "tremble" });
     let line = this.level.outcomes[outcome];
     if (this.fails >= 2) line += ` ${this.level.hint}`;
@@ -787,20 +794,23 @@ class MachineGame {
     this.say(this.level.outcomes.win, "good");
 
     // Sniff the air, then scurry over the bridge to the cheese.
-    for (let i = 0; i < 4; i++) { this.rat.rot.kick(i % 2 ? 60 : -60); this.rat.y.kick(-90); await wait(160); }
+    clearTimeout(this.idleTimer);
+    this.rat.play(["idle_3", "idle", "idle_3", "idle"], { fps: 6, ms: 700, end: null });
+    await wait(700);
     if (!live()) return;
-    const goal = G.cheese.x + G.cheese.w + 40 - G.rat.x;     // the rat's left edge just past the cheese
+    const goal = G.cheese.x + G.cheese.w - 30 - (G.rat.x + G.rat.body);   // the body's front just reaches the cheese
     ratEl.style.transition = "transform 2s cubic-bezier(.45,.05,.55,.95)";
     ratEl.style.transform = `translateX(${goal}px)`;
-    const hop = setInterval(() => { this.rat.y.kick(-170); this.rat.squash.kick(0.8); }, 140);
+    this.rat.play(["run_1", "run_2", "run_3", "run_4"], { fps: 10, ms: 2000, end: "idle" });
+    const hop = setInterval(() => { this.rat.rig.y.kick(-120); this.rat.rig.squash.kick(0.5); }, 200);
     await wait(2000);
     clearInterval(hop);
     if (!live()) return;
 
     // Three bites: crumbs fly, the wedge gets smaller, the stink goes away with it.
     for (let n = 0; n < 3; n++) {
-      this.rat.squash.kick(2.4);
-      this.rat.rot.kick(-90);
+      this.rat.play(["eat_1", "eat_2", "eat_3"], { fps: 6, ms: 500, end: "eat_3" });
+      this.rat.rig.squash.kick(1.6);
       this.view.bite(n);
       this.fx.crumbs(G.cheese.x + G.cheese.w + 10, G.ledgeY - 50);
       await wait(520);
@@ -810,8 +820,7 @@ class MachineGame {
     this.view.cheese.style.opacity = "0";
 
     // Full belly: a flop and a burp.
-    this.rat.squash.target = 0.12;
-    this.rat.rot.target = -8;
+    this.rat.play(["full_1", "full_2"], { fps: 2, ms: Infinity });
     const burp = $("machine-burp");
     const r = stageRect(ratEl);
     Object.assign(burp.style, { left: `${r.x - 30}px`, top: `${r.y - 50}px` });
