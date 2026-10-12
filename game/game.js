@@ -179,9 +179,12 @@ class Rig {
 
 // ---------- Actor: aligned pose frames with cross-fade + a Rig ----------
 class Actor {
-  constructor(name, elementId = name) {
+  // `crossfade: false` swaps frames outright: for a character that moves fast across the screen, where
+  // two overlapping poses would read as a ghost.
+  constructor(name, elementId = name, { crossfade = true } = {}) {
     this.name = name;
     this.el = $(elementId);
+    this.crossfade = crossfade;
     const { poses, idle } = CHARACTERS[name];
     this.rig = new Rig(this.el.querySelector(".rig"), idle);
     this.layers = [...this.el.querySelectorAll("img")];
@@ -210,9 +213,16 @@ class Actor {
     back.src = frameSrc(this.name, p);
     back.style.zIndex = 2;
     front.style.zIndex = 1;
-    back.classList.add("on");
     clearTimeout(this.fadeTimer);
-    this.fadeTimer = setTimeout(() => front.classList.remove("on"), 75);   // old frame vanishes once covered
+    if (this.crossfade) {
+      back.classList.add("on");
+      this.fadeTimer = setTimeout(() => front.classList.remove("on"), 75);   // old frame vanishes once covered
+    } else {
+      // Swap in one paint, once the new frame is decoded: never two poses at once, never an empty frame.
+      const shown = p;
+      const swap = () => { if (this.current === shown) { back.classList.add("on"); front.classList.remove("on"); } };
+      back.decode().then(swap, swap);
+    }
     this.front = 1 - this.front;
     if (pop) this.rig.pop();
   }

@@ -629,21 +629,17 @@ body { font-family: var(--font-body); color: var(--ink); }
 @keyframes flame-frame { 0% { opacity: 1; } 33.34%, 100% { opacity: 0; } }
 .out .flame-glow { opacity: 0; }
 .spin .blades { animation: spin .25s linear infinite; transform-box: fill-box; transform-origin: center; }
-/* Painted stink wisps rise and fade one after another; the flies circle with flapping wings. */
+/* Painted stink wisps rise and fade one after another. */
 .stink image { opacity: 0; animation: stink 2.6s ease-in infinite; }
 .stink image:nth-child(2) { animation-delay: .85s; }
 .stink image:nth-child(3) { animation-delay: 1.7s; }
-.fly-frame { animation: flap .12s steps(1) infinite; }
-.fly-frame.w2 { animation-delay: -.06s; }
-@keyframes flap { 0% { opacity: 1; } 50%, 100% { opacity: 0; } }
-.fly { animation: spin 1.4s linear infinite; }
-.fly.b { animation-duration: 1.9s; animation-direction: reverse; }
 
 /* The rat's frames share one padded canvas (tools: PoseAligner); the body is 250px wide inside it. */
 /* The paws are 12% above the frame's bottom (the tail hangs lower), so the box sits that much lower. */
 .machine-rat { left: 952px; top: 158px; width: 255px; height: 187px; z-index: 4; }
 .machine-rat .flip { position: absolute; inset: 0; transform: scaleX(-1); }
 .machine-rat .rig { transform-origin: 50% 100%; }
+.machine-rat img.on { transition: none; }
 .burp { position: absolute; z-index: 5; display: none; font: 34px var(--font-title); color: var(--ink);
   background: #fffaf0; border: 4px solid var(--ink); border-radius: 50%; padding: 8px 20px; }
 .burp.show { display: block; animation: pop .4s cubic-bezier(.3,1.8,.5,1); }

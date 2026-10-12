@@ -25,7 +25,8 @@ const G = {
   pulley: { x: 510, y: 52, r: 16 },
   pivot: { x: 715, y: 375 },
   arm: 140,               // pivot → each pan
-  ropeArm: 205,           // pivot → the rope's hook (out past the left pan, clear of the ice)
+  ropeArm: 202,           // pivot → the beam's end ring (from the painting)
+  ringDrop: 12,           // the ring hangs this far below the beam's centre line
   maxTilt: 10,            // degrees at full tilt
   hang: 95,               // beam → pan rim
   bucket: { x: 440, w: 110, rim: 0.37 },   // the painting's rim sits 37% down from its top
@@ -234,7 +235,7 @@ class MachineView {
     const p = G.pulley;
     svgEl("rect", { x: p.x - 8, y: 0, width: 16, height: p.y - 6, fill: "#7a5222", class: "ink" }, s);
 
-    // The painted cheese (one picture per bite stage), its stink and a couple of flies.
+    // The painted cheese (one picture per bite stage) and its stink.
     const c = G.cheese;
     const cheese = svgEl("image", { href: `${MACHINE_ART}cheese_0.webp`, x: c.x, y: G.ledgeY - c.h + 4, width: c.w, height: c.h,
                                     preserveAspectRatio: "xMidYMax meet" }, s);
@@ -245,12 +246,6 @@ class MachineView {
       stink.insertAdjacentHTML("beforeend", partImg(`stink_${i + 1}`, x - 14, y - 84, 28, 84, { align: "xMidYMax" }));
     });
     this.stink = stink;
-    for (const [fx, fy, cls] of [[c.x + 0.45 * c.w, G.ledgeY - c.h - 50, "fly"], [c.x + 0.75 * c.w, G.ledgeY - c.h - 25, "fly b"]]) {
-      const at = svgEl("g", { transform: `translate(${fx} ${fy})` }, s);
-      const fly = svgEl("g", { class: cls }, at);
-      fly.insertAdjacentHTML("beforeend", [1, 2].map((i) =>
-        partImg(`fly_${i}`, 16, -17, 34, 34, { cls: `fly-frame w${i}`, align: "xMidYMid" })).join(""));
-    }
 
     // The bucket the tray pours into, with its water level.
     // The painted bucket; its water shows through the tin as a translucent layer, so kids see it fill up.
@@ -289,6 +284,12 @@ class MachineView {
          <image href="${PARTS_ART}rope.webp" width="27" height="10" preserveAspectRatio="none"/></pattern>`);
     this.ropeArc = svgEl("path", { class: "rope" }, s);
     this.ropeSpans = [0, 1].map(() => svgEl("rect", { y: -5, height: 10, fill: "url(#m-rope)" }, s));
+    // A painted knot tied through an iron ring at each end: on the plank near its tip, and on the beam's end ring.
+    this.knots = [0, 1].map(() => {
+      const g = svgEl("g", {}, s);
+      g.insertAdjacentHTML("beforeend", partImg("knot", -13, -77, 26, 88, { fit: "none" }));   // ring centre at (0, 0)
+      return g;
+    });
     s.insertAdjacentHTML("beforeend", partImg("pulley", p.x - 0.5 * 40, p.y - 0.6 * 53, 40, 53));
 
     // The drawbridge, hinged at the cheese shelf.
@@ -353,7 +354,8 @@ class MachineView {
     const dx = G.arm * Math.cos(rad), dy = G.arm * Math.sin(rad);
     const ends = { left: { x: pv.x - dx, y: pv.y - dy }, right: { x: pv.x + dx, y: pv.y + dy } };
     this.pans = { left: { x: ends.left.x, y: ends.left.y + G.hang }, right: { x: ends.right.x, y: ends.right.y + G.hang } };
-    const hook = { x: pv.x - G.ropeArm * Math.cos(rad), y: pv.y - G.ropeArm * Math.sin(rad) };
+    // The rope's ring on the beam: the painted end ring, a little below the beam's centre line.
+    const hook = { x: pv.x - G.ropeArm * Math.cos(rad) - G.ringDrop * Math.sin(rad), y: pv.y - G.ropeArm * Math.sin(rad) + G.ringDrop * Math.cos(rad) };
     this.beam.setAttribute("transform", `rotate(${deg.toFixed(2)} ${pv.x} ${pv.y})`);
     this.leftPan.setAttribute("transform", `translate(${this.pans.left.x.toFixed(1)} ${this.pans.left.y.toFixed(1)})`);
     this.rightPan.setAttribute("transform", `translate(${this.pans.right.x.toFixed(1)} ${this.pans.right.y.toFixed(1)})`);
@@ -367,7 +369,9 @@ class MachineView {
     // Bridge, and the rope from its tip over the pulley to the beam's left end.
     const a = (state.bridge * Math.PI) / 180;
     this.bridge.setAttribute("transform", `rotate(${(-state.bridge).toFixed(2)} ${G.hinge.x} ${G.hinge.y})`);
-    const tip = { x: G.hinge.x + G.bridgeLen * Math.cos(a), y: G.hinge.y - G.bridgeLen * Math.sin(a) - 9 };
+    // The rope's ring on the plank: on its top face, a little in from the tip (it turns with the plank).
+    const along = G.bridgeLen - 26, up = 13 + 7;
+    const tip = { x: G.hinge.x + along * Math.cos(a) - up * Math.sin(a), y: G.hinge.y - along * Math.sin(a) - up * Math.cos(a) };
     const p = G.pulley;
     // Two straight spans of painted rope (bridge tip → pulley, pulley → beam hook) and the bend over the wheel.
     [[tip, { x: p.x + p.r, y: p.y }], [{ x: p.x - p.r, y: p.y }, hook]].forEach(([from, to], i) => {
@@ -376,6 +380,11 @@ class MachineView {
       const span = this.ropeSpans[i];
       span.setAttribute("width", len.toFixed(1));
       span.setAttribute("transform", `translate(${from.x.toFixed(1)} ${from.y.toFixed(1)}) rotate(${deg.toFixed(2)})`);
+    });
+    // Each knot points its rope toward the pulley.
+    [[tip, { x: p.x + p.r, y: p.y }], [hook, { x: p.x - p.r, y: p.y }]].forEach(([at, toward], i) => {
+      const deg = (Math.atan2(toward.y - at.y, toward.x - at.x) * 180) / Math.PI + 90;
+      this.knots[i].setAttribute("transform", `translate(${at.x.toFixed(1)} ${at.y.toFixed(1)}) rotate(${deg.toFixed(2)})`);
     });
     this.ropeArc.setAttribute("d", `M${p.x + p.r} ${p.y} A${p.r} ${p.r} 0 0 0 ${p.x - p.r} ${p.y}`);
 
@@ -450,7 +459,7 @@ class MachineGame {
     this.fx = new MachineFX($("machine-fx"));
     this.view = new MachineView($("machine-scene"), this.fx);
     this.professor = new Actor("professor", "machine-professor");
-    this.rat = new Actor("rat", "machine-rat");
+    this.rat = new Actor("rat", "machine-rat", { crossfade: false });
     this.lever = new Lever(() => {}, () => {}, () => this.pull(), $("machine-lever"));
     this.run = 0;
     this.view.svg.addEventListener("click", (e) => {
