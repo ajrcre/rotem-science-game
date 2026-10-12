@@ -546,6 +546,8 @@ class MachineGame {
     clearInterval(this.typeTimer);
     clearTimeout(this.idleTimer);
     cancelAnimationFrame(this.raf);
+    this.drag?.ghost.remove();
+    this.drag = null;
     this.fx.clear();
   }
 
@@ -583,63 +585,120 @@ class MachineGame {
     this.view.apply(s, this.level);
   }
 
+  // The tray holds the open step's objects themselves (no cards). A placed object leaves an empty spot.
   renderCards() {
     const wrap = $("machine-cards");
     wrap.innerHTML = "";
     this.cards = {};
     const slot = this.level.stages[this.stage].slot;
     for (const key of this.level.deck.filter((k) => PARTS[k].slot === slot)) {
-      const btn = el("button", "card");
-      btn.type = "button";
-      btn.dataset.key = key;
-      btn.innerHTML = `<svg viewBox="0 0 120 120"><defs>${ART_DEFS.replaceAll('id="m-', `id="c-${key}-`)}</defs>${PART_ART[key]().replaceAll("url(#m-", `url(#c-${key}-`)}</svg><span>${PARTS[key].label}</span>`;
-      btn.addEventListener("click", () => this.pick(key));
-      if (this.placed[slot] === key) btn.classList.add("used");
-      this.cards[key] = btn;
-      wrap.append(btn);
+      const item = el("button", "tray-item");
+      item.type = "button";
+      item.dataset.key = key;
+      item.setAttribute("aria-label", PARTS[key].label);
+      item.innerHTML = this.artSvg(key);
+      item.addEventListener("pointerdown", (e) => this.grab(e, key));
+      item.addEventListener("keydown", (e) => {               // keyboard: Enter places it (no dragging needed)
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); this.place(key); }
+      });
+      if (this.placed[slot] === key) item.classList.add("used");
+      this.cards[key] = item;
+      wrap.append(item);
     }
   }
 
-  // A card flies to its slot (whatever was there goes back to the tray). Clicking a placed card takes it back.
-  async pick(key) {
+  artSvg(key) {
+    return `<svg viewBox="0 0 120 120"><defs>${ART_DEFS.replaceAll('id="m-', `id="c-${key}-`)}</defs>${PART_ART[key]().replaceAll("url(#m-", `url(#c-${key}-`)}</svg>`;
+  }
+
+  // ---------- Drag and drop: drop the object (roughly) where it belongs, or it slides back to the tray ----------
+  stagePoint(e) {
+    const base = $("stage").getBoundingClientRect();
+    const s = stageScale();
+    return { x: (e.clientX - base.left) / s, y: (e.clientY - base.top) / s };
+  }
+
+  grab(e, key) {
+    const slot = PARTS[key].slot;
+    if (this.running || this.drag || slot !== this.level.stages[this.stage].slot || this.placed[slot] === key) return;
+    e.preventDefault();
+    const item = this.cards[key];
+    const from = stageRect(item.querySelector("svg"));
+    const ghost = el("div", "drag-ghost");
+    ghost.innerHTML = this.artSvg(key);
+    Object.assign(ghost.style, { left: `${from.x}px`, top: `${from.y}px`, width: `${from.w}px`, height: `${from.h}px` });
+    $("machine").append(ghost);
+    item.classList.add("used");
+    const at = this.stagePoint(e);
+    this.drag = { key, ghost, from, off: { x: at.x - from.x, y: at.y - from.y }, pointer: e.pointerId };
+    Sfx.play("click", { volume: 0.6 });
+    const move = (ev) => {
+      if (ev.pointerId !== this.drag?.pointer) return;
+      const pt = this.stagePoint(ev);
+      Object.assign(ghost.style, { left: `${pt.x - this.drag.off.x}px`, top: `${pt.y - this.drag.off.y}px` });
+    };
+    const up = (ev) => {
+      if (ev.pointerId !== this.drag?.pointer) return;
+      removeEventListener("pointermove", move);
+      removeEventListener("pointerup", up);
+      removeEventListener("pointercancel", up);
+      this.drop(ev.type === "pointercancel" ? null : this.stagePoint(ev));
+    };
+    addEventListener("pointermove", move);
+    addEventListener("pointerup", up);
+    addEventListener("pointercancel", up);
+  }
+
+  // Close enough to where the object belongs (its centre within the spot, plus some slack)?
+  nearSlot(slot, pt, ghostRect) {
+    const r = this.view.slotRect(slot);
+    const cx = ghostRect.x + ghostRect.w / 2, cy = ghostRect.y + ghostRect.h / 2;
+    const slack = 55;
+    const inside = (x, y) => x > r.x - slack && x < r.x + r.w + slack && y > r.y - slack && y < r.y + r.h + slack;
+    return inside(cx, cy) || (pt && inside(pt.x, pt.y));
+  }
+
+  async drop(pt) {
+    const { key, ghost, from } = this.drag;
+    const slot = PARTS[key].slot;
+    const g = { x: parseFloat(ghost.style.left), y: parseFloat(ghost.style.top), w: from.w, h: from.h };
+    if (pt && !this.running && this.nearSlot(slot, pt, g)) {
+      ghost.remove();
+      this.drag = null;
+      this.place(key);
+      return;
+    }
+    // Not there: it slides back to its spot on the tray.
+    ghost.classList.add("returning");
+    Object.assign(ghost.style, { left: `${from.x}px`, top: `${from.y}px` });
+    Sfx.play("click", { volume: 0.4, rate: 0.7 });
+    await wait(320);
+    ghost.remove();
+    if (this.placed[slot] !== key) this.cards[key]?.classList.remove("used");
+    this.drag = null;
+  }
+
+  // The object goes into its slot (whatever was there goes back to the tray).
+  place(key) {
     const slot = PARTS[key].slot;
     if (this.running || slot !== this.level.stages[this.stage].slot) return;
-    if (this.placed[slot] === key) return this.remove(slot);
     Sfx.play("click");
-    if (this.placed[slot]) this.cards[this.placed[slot]]?.classList.remove("used");
+    if (this.placed[slot] && this.placed[slot] !== key) this.cards[this.placed[slot]]?.classList.remove("used");
     this.placed[slot] = key;
-    this.cards[key].classList.add("used");
-    const run = this.run;
-    await this.fly(key, slot);
-    if (run !== this.run || this.placed[slot] !== key) return;
+    this.cards[key]?.classList.add("used");
     this.view.setPart(slot, key);
     this.showIdle(false);
     if (this.mode === "hints") this.say(PARTS[key].fact);
   }
 
+  // Tapping a placed object sends it back to the tray (only the open step's: earlier steps are solved).
   remove(slot) {
-    // Only the open step's part can go back: the earlier steps are solved and stay in place.
     if (this.running || !this.placed[slot] || slot !== this.level.stages[this.stage].slot) return;
     Sfx.play("click", { rate: 0.8 });
     this.cards[this.placed[slot]]?.classList.remove("used");
     this.placed[slot] = null;
     this.view.setPart(slot, null);
     this.showIdle(false);
-  }
-
-  async fly(key, slot) {
-    const card = this.cards[key].querySelector("svg");
-    const from = stageRect(card);
-    const to = this.view.slotRect(slot);
-    const div = el("div", "flyer-svg");
-    div.innerHTML = card.outerHTML;
-    Object.assign(div.style, { left: `${from.x}px`, top: `${from.y}px`, width: `${from.w}px`, height: `${from.h}px` });
-    $("machine").append(div);
-    await wait(20);
-    const size = Math.min(to.w, to.h + 30);
-    Object.assign(div.style, { left: `${to.x + (to.w - size) / 2}px`, top: `${to.y + to.h - size}px`, width: `${size}px`, height: `${size}px` });
-    await wait(520);
-    div.remove();
   }
 
   // Professor speaks: typewriter text in his bubble while his mouth flaps (narration comes in phase 2).
