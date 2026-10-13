@@ -157,6 +157,18 @@ def test_promote_encodes_every_variant_and_lists_them(tmp_path):
     assert all((out / f).stat().st_size > 0 for f in variants["boom"])
 
 
+
+@needs_ffmpeg
+def test_promote_keeps_the_sounds_it_was_not_asked_about(tmp_path):
+    cand = tmp_path / "cand" / "elevenlabs"
+    cand.mkdir(parents=True)
+    fs.write_wav(cand / "boom.wav", _tone(0.2, fs.RATE))
+    out = tmp_path / "sfx"
+    out.mkdir()
+    (out / "variants.json").write_text(json.dumps({"click": ["click.mp3"]}))
+    variants = json.loads(fs.promote("elevenlabs", ["boom"], tmp_path / "cand", out).read_text())
+    assert variants == {"click": ["click.mp3"], "boom": ["boom.mp3"]}
+
 def test_game_ships_every_sound_it_plays():
     sfx = ROOT / "assets" / "sfx"
     variants = json.loads((sfx / "variants.json").read_text())

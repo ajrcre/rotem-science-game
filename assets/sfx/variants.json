@@ -150,5 +150,61 @@
  "amb_drip": [
   "amb_drip.mp3",
   "amb_drip_2.mp3"
+ ],
+ "m_drip": [
+  "m_drip.mp3",
+  "m_drip_2.mp3"
+ ],
+ "m_sizzle": [
+  "m_sizzle.mp3",
+  "m_sizzle_2.mp3"
+ ],
+ "m_hiss": [
+  "m_hiss.mp3",
+  "m_hiss_2.mp3"
+ ],
+ "m_fan": [
+  "m_fan.mp3",
+  "m_fan_2.mp3"
+ ],
+ "m_chill": [
+  "m_chill.mp3",
+  "m_chill_2.mp3"
+ ],
+ "m_creak": [
+  "m_creak.mp3",
+  "m_creak_2.mp3"
+ ],
+ "m_thud": [
+  "m_thud.mp3",
+  "m_thud_2.mp3"
+ ],
+ "m_squeak": [
+  "m_squeak.mp3",
+  "m_squeak_2.mp3"
+ ],
+ "m_scared": [
+  "m_scared.mp3",
+  "m_scared_2.mp3"
+ ],
+ "m_sad": [
+  "m_sad.mp3",
+  "m_sad_2.mp3"
+ ],
+ "m_scurry": [
+  "m_scurry.mp3",
+  "m_scurry_2.mp3"
+ ],
+ "m_munch": [
+  "m_munch.mp3",
+  "m_munch_2.mp3"
+ ],
+ "m_burp": [
+  "m_burp.mp3",
+  "m_burp_2.mp3"
+ ],
+ "m_pop": [
+  "m_pop.mp3",
+  "m_pop_2.mp3"
  ]
 }

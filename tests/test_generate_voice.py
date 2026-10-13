@@ -1,3 +1,4 @@
+import json
 import shutil
 import sys
 from pathlib import Path
@@ -112,3 +113,29 @@ def test_every_niqqud_word_is_in_some_line_and_keeps_its_letters():
     for word, pointed in gv.PRONUNCIATION.words.items():
         assert gv.Pronunciation({word: pointed}).found(plain), word
         assert strip(pointed).replace("ו", "").replace("י", "") == word.replace("ו", "").replace("י", ""), word
+
+
+# ---------- The rat-and-cheese machine ----------
+
+@needs_node
+def test_machine_lines_cover_every_stage_outcome_and_part():
+    data = gv.load_game_data()
+    keys = {line.key for line in gv.collect_machine_lines(data)}
+    assert {f"part_{k}" for k in data["PARTS"]} <= keys
+    for level in data["MOUSE_LEVELS"]:
+        n = level["id"]
+        for mode in ("hints", "plain"):
+            assert {f"m{n}_intro_{i}_{mode}" for i in range(len(level["stages"]))} <= keys
+            assert {f"m{n}_{outcome}_{mode}" for outcome in level["outcomes"]} <= keys
+        assert {f"m{n}_hint_{i}" for i in range(len(level["stages"]))} <= keys
+    machine = (ROOT / "game" / "machine.js").read_text()
+    for asked in ("`part_${key}`", 'this.voice(`intro_', 'this.voice(`hint_', "this.voice(outcome)", 'this.voice("win")'):
+        assert asked in machine
+
+
+@needs_node
+def test_every_machine_line_is_recorded_from_its_current_text():
+    manifest = json.loads(gv.MANIFEST.read_text("utf-8"))
+    for line in gv.collect_machine_lines(gv.load_game_data()):
+        assert (gv.VOICE_DIR / f"{line.key}.mp3").is_file(), line.key
+        assert manifest.get(line.key) == line.speech, line.key

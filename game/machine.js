@@ -440,6 +440,18 @@ class MachineView {
   }
 }
 
+// ---------- Sounds of the machine (Facade over Sfx): placed by where they happen, never piling up ----------
+const MachineSound = {
+  last: {},
+  // `x` is a stage x (0…1600): the sound comes from that side. `gap` (s) skips repeats closer than that.
+  play(name, { x = null, gap = 0, ...opts } = {}) {
+    const now = performance.now() / 1000;
+    if (gap && now - (this.last[name] || -Infinity) < gap) return;
+    this.last[name] = now;
+    Sfx.play(name, { ...opts, pan: x === null ? 0 : clamp((x - 800) / 800, -1, 1) * 0.6 });
+  },
+};
+
 // ---------- Progress: best stars per level (this browser only) ----------
 const MachineProgress = {
   key: "mouse-machine-progress-v1",
@@ -503,12 +515,14 @@ class MachineGame {
       return btn;
     }));
     $("machine-mode").classList.add("show");
+    Music.play("lab");
   }
 
   begin(level, mode) {
     this.level = level;
     this.mode = mode;
     this.run += 1;
+    Music.stop();                                // the puzzle itself has no background music
     this.placed = Object.fromEntries(level.slots.map((s) => [s, null]));
     this.stage = 0;
     this.fails = 0;
@@ -531,18 +545,20 @@ class MachineGame {
     this.lever.reset();
     this.lever.show();
     this.professor.reset();
-    this.say(this.line(level.stages[0].intro));
+    this.say(this.line(level.stages[0].intro), "", [this.voice("intro_0")]);
     this.loop();
   }
 
-  // A line in the chosen mode ({ hints, plain }).
+  // A line in the chosen mode ({ hints, plain }), and its recording (tools/generate_voice.py keys).
   line(text) { return text[this.mode]; }
+  voice(key, moded = true) { return `m${this.level.id}_${key}${moded ? `_${this.mode}` : ""}`; }
 
   openSlots() { return this.level.stages.slice(0, this.stage + 1).map((st) => st.slot); }
 
   stop() {
     this.run += 1;
     this.running = false;
+    Narrator.stop();
     clearInterval(this.typeTimer);
     clearTimeout(this.idleTimer);
     cancelAnimationFrame(this.raf);
@@ -682,13 +698,13 @@ class MachineGame {
   place(key) {
     const slot = PARTS[key].slot;
     if (this.running || slot !== this.level.stages[this.stage].slot) return;
-    Sfx.play("click");
+    MachineSound.play("m_pop", { x: G.slots[slot].x });
     if (this.placed[slot] && this.placed[slot] !== key) this.cards[this.placed[slot]]?.classList.remove("used");
     this.placed[slot] = key;
     this.cards[key]?.classList.add("used");
     this.view.setPart(slot, key);
     this.showIdle(false);
-    if (this.mode === "hints") this.say(PARTS[key].fact);
+    if (this.mode === "hints") this.say(PARTS[key].fact, "", [`part_${key}`]);
   }
 
   // Tapping a placed object sends it back to the tray (only the open step's: earlier steps are solved).
@@ -701,8 +717,10 @@ class MachineGame {
     this.showIdle(false);
   }
 
-  // Professor speaks: typewriter text in his bubble while his mouth flaps (narration comes in phase 2).
-  say(text, mood = "") {
+  // Professor speaks: typewriter text in his bubble and his recorded voice, while his mouth flaps.
+  // Resolves once the recording has ended and the bubble had time to be read.
+  say(text, mood = "", voice = []) {
+    const spoken = Narrator.speak(voice, (ms) => this.professor.play(["talk", "idle"], { fps: 4, ms }));
     const b = $("machine-bubble");
     const p = $("machine-bubble-text");
     b.className = "bubble machine-bubble " + mood;
@@ -716,7 +734,7 @@ class MachineGame {
       if (n >= text.length) clearInterval(this.typeTimer);
     }, 40);
     this.professor.play(["talk", "idle"], { fps: 4, ms: Math.min(text.length * 24, 2600) });
-    return wait((text.length / 2) * 40 + 1400);
+    return Promise.all([spoken, wait((text.length / 2) * 40 + 1400)]);
   }
 
   stars() { return Math.max(3 - this.fails, 1); }
@@ -741,7 +759,10 @@ class MachineGame {
       if (run !== this.run) return;
       if (this.rat.current === "idle" && !this.rat.timer) {
         if (Math.random() < 0.5) this.rat.play(["idle_2"], { ms: 220 });
-        else this.rat.play(["idle_3", "idle", "idle_3"], { fps: 6, ms: 700, react: "jump" });
+        else {
+          this.rat.play(["idle_3", "idle", "idle_3"], { fps: 6, ms: 700, react: "jump" });
+          if (Math.random() < 0.3) MachineSound.play("m_squeak", { x: G.rat.x + 100, volume: 0.35 });
+        }
       }
       this.ratIdle();
     }, rand(1800, 3800));
@@ -773,7 +794,7 @@ class MachineGame {
     const v = this.view;
     let ei = 0;
     let start = null;
-    let lastBead = 0, lastStreak = 0;
+    let lastBead = 0, lastStreak = 0, lastHum = -9, lastSizzle = -9, creakTilt = null;
     return new Promise((resolve) => {
       const tick = (now) => {
         if (run !== this.run) return resolve();
@@ -786,6 +807,18 @@ class MachineGame {
 
         // Ambient effects that follow the state, not single events.
         const heat = this.placed.heat;
+        const hx = G.slots.heat.x;
+        if (heat === "fan" && T - lastHum > 1.7) { lastHum = T; MachineSound.play("m_fan", { x: hx, volume: 0.7 }); }
+        if (heat === "icepack" && T - lastHum > 2.5) { lastHum = T; MachineSound.play("m_chill", { x: hx, volume: 0.6 }); }
+        if (state.lit && state.warm > 0 && state.ice > 0 && T - lastSizzle > 1.3) {
+          lastSizzle = T;
+          MachineSound.play("m_sizzle", { x: v.pans.left.x, volume: 0.55 });
+        }
+        creakTilt ??= state.tilt;
+        if (Math.abs(state.tilt - creakTilt) > 0.12) {
+          creakTilt = state.tilt;
+          MachineSound.play("m_creak", { x: G.pivot.x, gap: 0.6, volume: 0.7 });
+        }
         if (state.lit && state.warm > 0 && state.ice > 0 && T - lastBead > 0.12) {
           lastBead = T;
           const side = rand(-1, 1) > 0 ? 1 : -1;
@@ -813,10 +846,13 @@ class MachineGame {
       const toY = v.dropTarget(x, e.to);
       v.fx.drop({ x, y, toY, onLand: (lx, ly) => this.land(e.to, lx, ly) });
     } else if (e.type === "doused") {
+      MachineSound.play("m_hiss", { x: G.slots.heat.x });
+      MachineSound.play("m_scared", { x: G.rat.x + 100, volume: 0.8 });
       v.fx.smoke(G.slots.heat.x, G.floor - 95, 7);
       v.fx.smoke(G.slots.heat.x, G.floor - 95, 3, false);
       this.rat.play(["scared_1", "scared_2"], { fps: 4, ms: 1300, react: "tremble" });
     } else if (e.type === "bridge_down") {
+      MachineSound.play("m_thud", { x: G.hinge.x + G.bridgeLen / 2 });
       v.fx.dust(G.ratLedge[0], G.ledgeY, 12);
       Film.quake();
     }
@@ -831,22 +867,31 @@ class MachineGame {
       const t = G.tray;
       fx.add({ kind: "spray", x, y, vx: -260, vy: 40, r: 3.5, life: 0.18 + (x - t.left[0]) / 900, color: "rgba(150,205,245,.95)", gravity: 60 });
       setTimeout(() => fx.drop({ x: t.left[0] - 6, y: t.left[1], toY: this.view.waterTop || G.floor - 8, swell: 0.02, fall: 0.18,
-                                 onLand: (lx, ly) => fx.splash(lx, ly, { n: 4 }) }), 150 + (x - t.left[0]) * 1.5);
+                                 onLand: (lx, ly) => { fx.splash(lx, ly, { n: 4 }); this.plink(lx); } }), 150 + (x - t.left[0]) * 1.5);
     } else if (to === "sponge") {
       fx.add({ kind: "ring", x, y, life: 0.3 });
+      this.plink(x, { volume: 0.3, rate: 0.7 });
     } else if (to === "flame") {
       fx.splash(x, y, { n: 5 });
       fx.smoke(x, y, 2, false);
+      this.plink(x);
     } else {
       fx.splash(x, y, { n: 5 });
+      this.plink(x, { rate: 0.85 });
     }
+  }
+
+  // One drop's plink; a fast drip doesn't stack into noise.
+  plink(x, { volume = 0.6, rate } = {}) {
+    MachineSound.play("m_drip", { x, gap: 0.09, volume, rate: rate ?? 0.95 + Math.random() * 0.2 });
   }
 
   // The run taught something: the professor says what happened, and the next step's slot opens. No star lost.
   async discover(stage) {
     const run = this.run;
     this.professor.play(["cheer", "talk", "idle"], { fps: 3, ms: 1500, react: "jump" });
-    const said = this.say(this.line(this.level.stages[stage].intro), "good");
+    Sfx.play("card_right", { volume: 0.7 });
+    const said = this.say(this.line(this.level.stages[stage].intro), "good", [this.voice(`intro_${stage}`)]);
     await wait(1600);
     if (run !== this.run) return;
     this.stage = stage;
@@ -854,6 +899,7 @@ class MachineGame {
     this.resetMachine();
     this.renderCards();
     this.view.showSlots(this.openSlots());
+    MachineSound.play("m_pop", { x: G.slots[this.level.stages[stage].slot].x });
     await said;
   }
 
@@ -863,10 +909,15 @@ class MachineGame {
     this.stageFails += 1;
     this.updateStars();
     this.rat.play(["sad_1", "sad_1", "sad_2", "sad_2"], { fps: 2, ms: 2200, react: "droop" });
+    MachineSound.play("m_sad", { x: G.rat.x + 100 });
     this.professor.play(["worried"], { ms: 1600, react: "tremble" });
     let line = this.line(this.level.outcomes[outcome]);
-    if (this.mode === "hints" && this.stageFails >= 2) line += ` ${this.level.stages[this.stage].hint}`;
-    const said = this.say(line, "bad");
+    const voice = [this.voice(outcome)];
+    if (this.mode === "hints" && this.stageFails >= 2) {
+      line += ` ${this.level.stages[this.stage].hint}`;
+      voice.push(this.voice(`hint_${this.stage}`, false));
+    }
+    const said = this.say(line, "bad", voice);
     await wait(1600);
     if (run !== this.run) return;
     this.resetMachine();
@@ -889,17 +940,19 @@ class MachineGame {
     const live = () => run === this.run;
     const ratEl = $("machine-rat");
     this.professor.play(["cheer", "talk", "cheer", "idle"], { fps: 3, ms: 1700, react: "jump" });
-    this.say(this.line(this.level.outcomes.win), "good");
+    this.say(this.line(this.level.outcomes.win), "good", [this.voice("win")]);
 
     // Sniff the air, then scurry over the bridge to the cheese.
     clearTimeout(this.idleTimer);
     this.rat.play(["idle_3", "idle", "idle_3", "idle"], { fps: 6, ms: 700, end: null });
+    MachineSound.play("m_squeak", { x: G.rat.x + 100 });
     await wait(700);
     if (!live()) return;
     const goal = G.cheese.x + G.cheese.w - 30 - (G.rat.x + G.rat.body);   // the body's front just reaches the cheese
     ratEl.style.transition = "transform 2s cubic-bezier(.45,.05,.55,.95)";
     ratEl.style.transform = `translateX(${goal}px)`;
     this.rat.play(["run_1", "run_2", "run_3", "run_4"], { fps: 10, ms: 2000, end: "idle" });
+    MachineSound.play("m_scurry", { x: (G.rat.x + G.cheese.x) / 2 });
     const hop = setInterval(() => { this.rat.rig.y.kick(-120); this.rat.rig.squash.kick(0.5); }, 200);
     await wait(2000);
     clearInterval(hop);
@@ -910,6 +963,7 @@ class MachineGame {
       this.rat.play(["eat_1", "eat_2", "eat_3"], { fps: 6, ms: 500, end: "eat_3" });
       this.rat.rig.squash.kick(1.6);
       this.view.bite(n);
+      MachineSound.play("m_munch", { x: G.cheese.x + G.cheese.w, rate: 0.95 + n * 0.05 });
       this.fx.crumbs(G.cheese.x + G.cheese.w, G.ledgeY - 0.4 * G.cheese.h);
       await wait(520);
       if (!live()) return;
@@ -923,6 +977,7 @@ class MachineGame {
     const r = stageRect(ratEl);
     Object.assign(burp.style, { left: `${r.x + r.w * 0.55}px`, top: `${r.y + r.h * 0.1}px` });
     restart(burp, "show");
+    MachineSound.play("m_burp", { x: G.cheese.x + G.cheese.w });
     await wait(1400);
     if (!live()) return;
     this.showVictory();

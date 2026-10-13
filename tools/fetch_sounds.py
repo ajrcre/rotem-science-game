@@ -234,8 +234,13 @@ def promote(source_key: str, names: list[str], candidates: Path = CANDIDATES, ou
     """Encode every variant of each sound to MP3 for the game and list them in variants.json.
 
     MP3 decodes in every browser's Web Audio; sound.js picks a random variant per play.
+    Sounds not named keep their entries, so new sounds can be shipped without re-encoding the rest.
     """
-    variants: dict[str, list[str]] = {}
+    path = out_dir / "variants.json"
+    try:
+        variants: dict[str, list[str]] = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        variants = {}
     out_dir.mkdir(parents=True, exist_ok=True)
     for name in names:
         files = sorted((candidates / source_key).glob(f"{name}*.wav"),
@@ -251,7 +256,6 @@ def promote(source_key: str, names: list[str], candidates: Path = CANDIDATES, ou
                             "-codec:a", "libmp3lame", "-b:a", "128k", str(target)], check=True)
             variants[name].append(target.name)
         logger.info("promoted sound", source=source_key, name=name, variants=len(files))
-    path = out_dir / "variants.json"
     path.write_text(json.dumps(variants, indent=1) + "\n", encoding="utf-8")
     return path
 

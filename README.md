@@ -117,6 +117,8 @@ python3 tools/fetch_sounds.py promote elevenlabs     # העברה למשחק (MP
 
 אפשר גם להביא חלופות בקוד פתוח מ-Kenney (רישיון CC0): `python3 tools/fetch_sounds.py kenney`. את כל הגרסאות אפשר להשוות ב-`game/sfx_compare.html`.
 
+לפינת הכימיה (העכברוש והגבינה) יש צלילים משלה, שמתחילים ב-`m_`: טפטוף, רחש הקרח הנמס, לחישת הנר כשהוא נכבה, חריקת המאזניים, נפילת הגשר וקולות העכברוש. `promote` מעדכן ב-`variants.json` רק את הצלילים שנשלחו לו, כך שאפשר להוסיף צלילים חדשים בלי לקודד מחדש את כל השאר.
+
 הצלילים המסונתזים הישנים (`tools/generate_sounds.py`) נשמרו ב-`assets/sfx_synth/` לצורך השוואה.
 
 כפתור 🔊 בפינת המסך משתיק ומחזיר את הצלילים.
@@ -136,7 +138,7 @@ python3 tools/prepare_music.py
 
 ## קריינות
 פרופסור מדעני מדבר בקול "Crazy Scientist" מ-ElevenLabs (מודל `eleven_v3`, שתומך בעברית). כל ההקלטות כבר שמורות בריפו. רק כדי להקליט שורות חדשות או ששונו צריך להגדיר את המשתנה `ELEVENLABS_API_KEY` בסביבה.
-הטקסטים נלקחים ישירות מ-`game/levels.js` ומ-`game/lab.js` (דרך node), והקבצים נשמרים ב-`assets/voice/`.
+הטקסטים נלקחים ישירות מ-`game/levels.js`, מ-`game/lab.js` ומ-`game/mouse_levels.js` (דרך node), והקבצים נשמרים ב-`assets/voice/`.
 
 ```bash
 python3 tools/generate_voice.py             # רק שורות חדשות או שהשתנו

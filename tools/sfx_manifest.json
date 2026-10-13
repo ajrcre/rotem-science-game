@@ -188,5 +188,75 @@
     "prompt": "water drops dripping one by one into a glass test tube, plink plink",
     "seconds": 1.2, "influence": 0.5, "level_db": -20,
     "kenney": null
+  },
+  "m_drip": {
+    "prompt": "single small water droplet falling into a metal bucket, one bright cartoon plink, very short, no reverb",
+    "seconds": 0.5, "influence": 0.6, "level_db": -18,
+    "kenney": null
+  },
+  "m_sizzle": {
+    "prompt": "ice cube melting over a candle, soft crackling and gentle sizzling with tiny drips, cartoon",
+    "seconds": 1.5, "influence": 0.5, "level_db": -22,
+    "kenney": null
+  },
+  "m_hiss": {
+    "prompt": "candle flame put out by water, sharp cartoon psssst hiss with a tiny puff of smoke",
+    "seconds": 1.0, "influence": 0.6, "level_db": -14,
+    "kenney": null
+  },
+  "m_fan": {
+    "prompt": "small desk fan whirring, soft spinning blades and gentle wind, cartoon",
+    "seconds": 2.0, "influence": 0.5, "level_db": -20,
+    "kenney": null
+  },
+  "m_chill": {
+    "prompt": "icy magical freeze, cold crystalline shimmer with frosty crackle, cartoon, short",
+    "seconds": 1.0, "influence": 0.5, "level_db": -20,
+    "kenney": null
+  },
+  "m_creak": {
+    "prompt": "old wooden balance scale creaking as it slowly tilts, short squeaky wooden creak, cartoon",
+    "seconds": 1.0, "influence": 0.6, "level_db": -16,
+    "kenney": null
+  },
+  "m_thud": {
+    "prompt": "heavy wooden drawbridge slamming down flat, solid cartoon wooden thud with a little rattle of chains",
+    "seconds": 0.9, "influence": 0.6, "level_db": -11,
+    "kenney": null
+  },
+  "m_squeak": {
+    "prompt": "small cartoon rat squeaking happily, two quick cute high squeaks",
+    "seconds": 0.6, "influence": 0.5, "level_db": -14,
+    "kenney": null
+  },
+  "m_scared": {
+    "prompt": "small cartoon rat shrieking in fright, short high startled squeak",
+    "seconds": 0.6, "influence": 0.5, "level_db": -14,
+    "kenney": null
+  },
+  "m_sad": {
+    "prompt": "small cartoon rat sighing sadly, a disappointed little descending whimper squeak",
+    "seconds": 0.9, "influence": 0.5, "level_db": -15,
+    "kenney": null
+  },
+  "m_scurry": {
+    "prompt": "small cartoon rat scurrying fast across a wooden plank, quick light pitter-patter of tiny claws",
+    "seconds": 2.0, "influence": 0.5, "level_db": -16,
+    "kenney": null
+  },
+  "m_munch": {
+    "prompt": "cartoon rat nibbling and munching cheese, quick crunchy chomp chomp",
+    "seconds": 0.6, "influence": 0.6, "level_db": -13,
+    "kenney": null
+  },
+  "m_burp": {
+    "prompt": "small cute cartoon burp from a full little animal, short and funny",
+    "seconds": 0.6, "influence": 0.6, "level_db": -13,
+    "kenney": null
+  },
+  "m_pop": {
+    "prompt": "soft cartoon pop as an object appears, bubbly little bloop, short",
+    "seconds": 0.5, "influence": 0.6, "level_db": -16,
+    "kenney": null
   }
 }

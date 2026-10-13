@@ -166,5 +166,61 @@
  "amb_drip": [
   "elevenlabs/amb_drip.wav",
   "elevenlabs/amb_drip_v2.wav"
+ ],
+ "m_drip": [
+  "elevenlabs/m_drip.wav",
+  "elevenlabs/m_drip_v2.wav"
+ ],
+ "m_sizzle": [
+  "elevenlabs/m_sizzle.wav",
+  "elevenlabs/m_sizzle_v2.wav"
+ ],
+ "m_hiss": [
+  "elevenlabs/m_hiss.wav",
+  "elevenlabs/m_hiss_v2.wav"
+ ],
+ "m_fan": [
+  "elevenlabs/m_fan.wav",
+  "elevenlabs/m_fan_v2.wav"
+ ],
+ "m_chill": [
+  "elevenlabs/m_chill.wav",
+  "elevenlabs/m_chill_v2.wav"
+ ],
+ "m_creak": [
+  "elevenlabs/m_creak.wav",
+  "elevenlabs/m_creak_v2.wav"
+ ],
+ "m_thud": [
+  "elevenlabs/m_thud.wav",
+  "elevenlabs/m_thud_v2.wav"
+ ],
+ "m_squeak": [
+  "elevenlabs/m_squeak.wav",
+  "elevenlabs/m_squeak_v2.wav"
+ ],
+ "m_scared": [
+  "elevenlabs/m_scared.wav",
+  "elevenlabs/m_scared_v2.wav"
+ ],
+ "m_sad": [
+  "elevenlabs/m_sad.wav",
+  "elevenlabs/m_sad_v2.wav"
+ ],
+ "m_scurry": [
+  "elevenlabs/m_scurry.wav",
+  "elevenlabs/m_scurry_v2.wav"
+ ],
+ "m_munch": [
+  "elevenlabs/m_munch.wav",
+  "elevenlabs/m_munch_v2.wav"
+ ],
+ "m_burp": [
+  "elevenlabs/m_burp.wav",
+  "elevenlabs/m_burp_v2.wav"
+ ],
+ "m_pop": [
+  "elevenlabs/m_pop.wav",
+  "elevenlabs/m_pop_v2.wav"
  ]
 }

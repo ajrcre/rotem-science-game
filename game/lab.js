@@ -134,7 +134,7 @@ const Screens = {
       leave() { game.stop(); WindowScene.hide(); LevelMap.hide(); $("victory").classList.remove("show"); $("quiz").classList.remove("show"); },
     },
     chemistry: {
-      music: "lab",             // sound for this game comes in its second phase
+      music: "lab",             // the mode picker; MachineGame.begin() stops it for the puzzle itself
       ready: () => loadImages([`${MACHINE_ART}lab_bg.webp`, frameSrc("professor", "idle"), frameSrc("rat", "idle"),
                                ...[0, 1, 2, 3].flatMap((i) => [`${MACHINE_ART}cheese_${i}.webp`, `${MACHINE_ART}ice_${i}.webp`])]),
       enter() { $("machine").classList.add("show"); machineGame.start(); },

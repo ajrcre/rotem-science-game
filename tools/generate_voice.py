@@ -7,7 +7,7 @@ Usage:
     python3 tools/generate_voice.py --list      # print every line, record nothing
 
 Reads the API key from the ELEVENLABS_API_KEY environment variable. The lines come
-straight from game/levels.js and game/lab.js (evaluated with node), so editing a line there and
+straight from game/levels.js, game/lab.js and game/mouse_levels.js (evaluated with node), so editing a line there and
 re-running this script re-records exactly that line: assets/voice/manifest.json keeps
 the text each clip was recorded from.
 
@@ -33,6 +33,7 @@ import requests
 ROOT = Path(__file__).resolve().parent.parent
 LEVELS_JS = ROOT / "game" / "levels.js"
 LAB_JS = ROOT / "game" / "lab.js"
+MOUSE_JS = ROOT / "game" / "mouse_levels.js"
 VOICE_DIR = ROOT / "assets" / "voice"
 MANIFEST = VOICE_DIR / "manifest.json"
 NIQQUD = ROOT / "tools" / "voice_niqqud.json"
@@ -127,15 +128,16 @@ def speech_text(text: str, mood: str = "", pronounce: Pronunciation | None = Non
     return f"[{mood}] {text}" if mood else text
 
 
-def load_game_data(levels_js: Path = LEVELS_JS, lab_js: Path = LAB_JS) -> dict:
-    """Evaluate levels.js and lab.js in node and return {"LEVELS": [...], "CARDS": {...}, "LAB_LINES": {...}}."""
+def load_game_data(levels_js: Path = LEVELS_JS, lab_js: Path = LAB_JS, mouse_js: Path = MOUSE_JS) -> dict:
+    """Evaluate the games' data in node: {"LEVELS", "CARDS", "LAB_LINES", "PARTS", "MOUSE_LEVELS"}."""
     script = (
         "const vm = require('vm'); const fs = require('fs'); const ctx = {};"
         "const src = process.argv.slice(1).map((f) => fs.readFileSync(f, 'utf8')).join(';\\n');"
-        "vm.runInNewContext(src + ';this.out = {LEVELS, CARDS, LAB_LINES};', ctx);"
+        "vm.runInNewContext(src + ';this.out = {LEVELS, CARDS, LAB_LINES, PARTS, MOUSE_LEVELS};', ctx);"
         "process.stdout.write(JSON.stringify(ctx.out));"
     )
-    out = subprocess.run(["node", "-e", script, str(levels_js), str(lab_js)], check=True, capture_output=True, text=True)
+    files = [str(levels_js), str(lab_js), str(mouse_js)]
+    out = subprocess.run(["node", "-e", script, *files], check=True, capture_output=True, text=True)
     return json.loads(out.stdout)
 
 
@@ -154,6 +156,20 @@ def collect_lines(data: dict) -> list[Line]:
         for i, q in enumerate(level["quiz"]):
             lines.append(Line(f"prompt_{n}_{i}", q["prompt"], "curious"))
             lines.append(Line(f"explain_{n}_{i}", q["explain"]))
+    return lines + collect_machine_lines(data)
+
+
+def collect_machine_lines(data: dict) -> list[Line]:
+    """The rat-and-cheese machine (game/machine.js). Lines with a { hints, plain } version get one clip each."""
+    lines = [Line(f"part_{key}", part["fact"]) for key, part in data.get("PARTS", {}).items()]
+    for level in data.get("MOUSE_LEVELS", []):
+        n = level["id"]
+        for i, stage in enumerate(level["stages"]):
+            lines += [Line(f"m{n}_intro_{i}_{mode}", text, "excited") for mode, text in stage["intro"].items()]
+            lines.append(Line(f"m{n}_hint_{i}", stage["hint"], "curious"))
+        for outcome, versions in level["outcomes"].items():
+            mood = "excited" if outcome == "win" else ""
+            lines += [Line(f"m{n}_{outcome}_{mode}", text, mood) for mode, text in versions.items()]
     return lines
 
 
